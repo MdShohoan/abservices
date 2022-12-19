@@ -1,0 +1,61 @@
+{% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        
+        <ul class="maps-tabs" role="tablist">
+            <li class="active"><a href="#branch" role="tab" data-toggle="tab"> Enter New Email</a></li>
+            <li><a href="#atm" role="tab" data-toggle="tab"> Update NID</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active in" id="branch">
+                    
+                <div class="table-responsive">
+                <table id="branch-table" class="display dataTable" style="width:100%">
+                    <thead>
+                        <div class="container updates">
+                            <img class="img-responsive"src="https://abbl.com/wp-content/themes/abbank/images/logo.png" />
+                        </div>	
+                        <div class="container updtaes" style="background-color: #ffffff">
+                            <div class="row" style="margin-top:20px;margin-bottom:20px">
+                                <div class="m-4">
+                                    <form action="/email/{{requestid}}/{{type}}" method="post" >
+                                        <div class="row align-items-center g-3" style=" display: flex;align-items: center;justify-content: center;height: 100%;">
+                                            <div class="col-auto">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="email">Email :</label>
+                                                </div>
+                                            </div>
+                                        <div class="col-auto">
+                                            <input type="text" class="form-control" name="email" id="email" placeholder="type your email" required>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="submit" style="background-color: #bb151c;border: none;;border-radius: 5px;color: white;text-align: center; font-size: 16px;height:40px;width:100px;margin-left:15px">Submit</button>
+                                            <input type="hidden" id="csrf_token" name="csrf_token" value="{{csrf_token()}}"/>
+                                            <input type="hidden" id="requestid" name="requestid" value="{{requestid}}"/>
+                                            <input type="hidden" id="request_type" name="request_type" value="{{type}}"/>
+                                        </div>
+                                    </div>
+                                </form>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="container updates">  <img  src="/static/image/abbl.png" /></div> 	
+                    </thead>
+                </table>
+                </div>	
+             </div>					
+        </div>
+        
+                        
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
