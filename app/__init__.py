@@ -8,6 +8,7 @@ import math as m
 #from waitress import serve
 
 from flask_migrate import Migrate
+from sqlalchemy import text
 from flask import Flask,session,current_app 
 from flask_wtf.csrf import CSRFProtect,generate_csrf
 #from flask_wtf.csrf import generate_csrf
@@ -134,7 +135,7 @@ app.config.from_object(config)
 db.init_app(app)
 db.app = app
 try:
-    db.session.execute('SELECT 1')
+    db.session.execute(text("SELECT 1"))
 except Exception as error:
     LOG.info(error)
     pass

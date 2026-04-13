@@ -8,7 +8,6 @@ directory = os.getcwd()
 # Create the super class
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
@@ -45,7 +44,7 @@ class DevelopmentConfig(Config):
     
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False    # Avoids SQLAlchemy warning
-    #SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Abblit143@192.168.19.71:5432/Email_App'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Abblit143@192.168.19.71:5432/Email_App'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     #SQLALCHEMY_ECHO = True
@@ -56,7 +55,7 @@ class DevelopmentConfig(Config):
         'poolclass' : NullPool
     }'''
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Abblit143@ABDCESTMTDB:5432/Email_App?options=-csearch_path=abbl' 
+    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Abblit143@ABDCESTMTDB:5432/Email_App?options=-csearch_path=abbl' 
    
     SQLALCHEMY_BINDS= {
         'otp_db_bind': 'postgresql://postgres:Abblit143@ABDCESTMTDB:5432/Email_App?options=-csearch_path=abbl',

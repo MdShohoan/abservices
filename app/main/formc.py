@@ -5,7 +5,7 @@ import requests
 import random
 import uuid
 from flask import render_template, send_file
-from flask import Blueprint,Markup, current_app,render_template, url_for, request,session, redirect,jsonify,redirect,flash,abort
+from flask import Blueprint, current_app,render_template, url_for, request,session, redirect,jsonify,redirect,flash,abort
 from flask_wtf.csrf import CSRFProtect,generate_csrf
 from flask_wtf.csrf import CSRFError
 from app.models import CUSTINFO, OTPModel,SMSINFO,OTP_HISTORY,CBS_CUSTOMERS,TININFO,REMITCUSTINFO

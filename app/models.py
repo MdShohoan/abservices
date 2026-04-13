@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from requests.models import RequestField
 
 db = SQLAlchemy()
 #db = SQLAlchemy(session_options={'autocommit':True})
@@ -11,7 +10,7 @@ class EQSessiontoken(db.Model):
 	id = db.Column('id', db.BigInteger, primary_key = True)
 	eqsessiontoken  = db.Column('eqsessiontoken',db.Text, nullable=False)
 	#eqsessiontoken  = db.Column(db.String(100), nullable=True)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	def __init__(self,id,eqsessiontoken,created_at):
 		
 		self.id = id
@@ -40,7 +39,7 @@ class OTPModel(db.Model):
 	
 	otp_tries = db.Column("otp_tries", db.Integer)
 	status = db.Column("status", db.Integer,nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	otp_request_count = db.Column("otp_request_count", db.Integer)
 
 	
@@ -98,13 +97,13 @@ class SMSINFO(db.Model):
 	message = db.Column("message",db.Text , nullable=False)
 	mobile = db.Column("mobile",db.String(15) , nullable=False)
 	#message = db.Column(db.String(13), unique=True, nullable=False)
-	sms_send_time = db.Column("sms_send_time",db.DATETIME,  nullable=False)
+	sms_send_time = db.Column("sms_send_time",db.DateTime,  nullable=False)
 	#ssl_reply_message = db.column ("ssl_reply_message",db.Text)
 	ssl_reply_message = db.Column("ssl_reply_message",db.Text , nullable=True)
 	#ssl_sms_reply_status = db.column ("ssl_sms_reply_status",db.Text)
 	ssl_sms_reply_status = db.Column("ssl_sms_reply_status",db.Text , nullable=True)
 	status = db.Column("status",db.Integer,nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	trackingcode = db.Column("trackingcode",db.Text , nullable=False)
 	code = db.Column("code",db.String(6) , nullable=False)
 	callback_url = db.Column("callback_url",db.Text , nullable=True)
@@ -115,7 +114,7 @@ class SMSINFO(db.Model):
 	#api_key = db.Column("api_key",db.Text , nullable=False)
 	#otp_tries = db.Column("otp_tries", db.Integer)
 	#status = db.Column("status", db.Integer,nullable=False)
-	#created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	#created_at = db.Column("created_at",db.DateTime , nullable=False)
 
 	def __init__(self,id,code,mobile,message,status,sms_send_time,ssl_reply_message,ssl_sms_reply_status,created_at,trackingcode,callback_url):
 		
@@ -180,7 +179,7 @@ class CBS_CUSTOMERS(db.Model):
 		residenceCountry  = db.Column("residenceCountry",db.String(2), nullable=True)
 		status = db.Column("status",db.Integer, nullable=False)
 		taxid = db.Column("taxid",db.String(80), nullable=False)
-		created_at = db.Column("created_at",db.DATETIME , nullable=False)
+		created_at = db.Column("created_at",db.DateTime , nullable=False)
 		csrf = db.Column("csrf",db.String(12), nullable=False)
 		requestid = db.Column("requestid",db.String(12), nullable=False)
 
@@ -263,7 +262,7 @@ class OTP_HISTORY(db.Model):
 	#code = db.Column("code",db.String(120) , nullable=False)
 	#otp_tries = db.Column("otp_tries", db.Integer)
 	#status = db.Column("status", db.Integer,nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 
 	def __init__(self, id, mobile,api_token,code,user_otp,created_at):
 		self.id = id
@@ -312,7 +311,7 @@ class CUSTINFO(db.Model):
 	api_key = db.Column("api_key",db.Text , nullable=False)
 	#otp_tries = db.Column("otp_tries", db.Integer)
 	#user_otp = db.Column("user_otp",db.String(120) , nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	sms_verify_status = db.Column("sms_verify_status", db.Integer,nullable=False)
 	email_verify_status = db.Column("email_verify_status", db.Integer,nullable=False)
 	status = db.Column("status", db.Integer,nullable=False)
@@ -398,13 +397,13 @@ class TININFO(db.Model):
 	otp_status = db.Column("otp_status", db.Integer,nullable=False)
 	status = db.Column("status", db.Integer,nullable=False)
 	tin_return_file = db.Column("tin_return_file",db.String(200) , nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	branch_code = db.Column("branch_code",db.String(4) , nullable=False)
 	card_no = db.Column("card_no",db.String(20) , nullable=True)
 	maker_by = db.Column("maker_by",db.String(220) , nullable=True)
 	approve_by = db.Column("approve_by",db.String(20) , nullable=True)
 	customer_basic = db.Column("customer_basic",db.String(15) , nullable=True)
-	updated_at = db.Column("updated_at",db.DATETIME , nullable=False)
+	updated_at = db.Column("updated_at",db.DateTime , nullable=False)
 
 	#otp_tries = db.Column("otp_tries", db.Integer)
 	#user_otp = db.Column("user_otp",db.String(120) , nullable=False)
@@ -544,7 +543,7 @@ class REMITCUSTINFO(db.Model):
 	api_key = db.Column("api_key",db.Text , nullable=False)
 	#otp_tries = db.Column("otp_tries", db.Integer)
 	#user_otp = db.Column("user_otp",db.String(120) , nullable=False)
-	created_at = db.Column("created_at",db.DATETIME , nullable=False)
+	created_at = db.Column("created_at",db.DateTime , nullable=False)
 	sms_verify_status = db.Column("sms_verify_status", db.Integer,nullable=False)
 	email_verify_status = db.Column("email_verify_status", db.Integer,nullable=False)
 	status = db.Column("status", db.Integer,nullable=False)
