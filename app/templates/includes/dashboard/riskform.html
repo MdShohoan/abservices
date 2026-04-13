@@ -1,0 +1,445 @@
+<div class="container-fluid">
+    <h4 class="c-grey-900 mT-10 mB-30">RISK GRADING FORM </h4>
+    <form id="riskform" method="POST" action="">
+        <!-- start section -->
+        <div class="row gap-20 masonry pos-r ">
+            <div class="masonry-sizer col-md-6"></div>
+
+            <div class="masonry-item col-md-6">
+                <div class="bgc-grey p-20 bd">
+                    <h6 class="c-grey-900">Product/Service and Onboarding channel Risk </h6>
+                    <div class="mT-30">
+                        <div class="form-group">
+                            <label id="type_product_service_label" for="type of product">Type of product/service</label>
+                            <select name="type_product_service" id="type_product_service" class="form-control">
+                                <option selected="selected" value="">Choose...</option>
+                                {% for p in productscore %}
+                                    <option value="{{ p.score }}" {% if p.product == cur_product and cur_product is defined  %} selected="selected"{% endif %} >{{ p.product }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="producttype" id="producttype" value="{% if cur_product %} {{cur_product}}  {% endif %}" />
+
+
+                        </div>
+                        <div class="form-group">
+                            <label for="inputState">Onboarding channel</label>
+
+                            <select name="on_boarding_channel" id="on_boarding_channel" class="form-control">
+                            
+                            <option selected="selected" value="">Choose option...</option>
+                            
+                            {% for onscore in onboardscore %}
+                                <option value = "{{onscore.score}}" {% if onscore.score == curr_on_boarding_channel_score and curr_on_boarding_channel_score is defined  %} selected="selected"{% endif %}  >{{ onscore.channel}}</option>
+                           
+                            {% endfor %}
+                            
+                        </select>
+
+                            <input type="hidden" name="onboardingchannel" id="onboardingchannel" value="{% if cur_onboardingchannel and cur_onboardingchannel is defined %} {{cur_onboardingchannel}}  {% endif %}" />
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+
+            <div class="masonry-item col-md-6">
+                <div class="bgc-white p-20 bd">
+                    <h6 class="c-grey-900">Geographical Risk</h6>
+                    <div class="mT-30">
+
+                        <div class="form-group row" id="residential_div">
+                            <label for="Residential Status">Customer's Residential Status</label>
+                            <select name="residential_status_cbs" id="residential_status_cbs" class="form-control">
+                                    <option selected="selected" value="">Choose option...</option>
+                                    
+                                    {% for rs in resiscore %}
+                                        <option value = "{{rs.score}}" {% if rs.residence == cur_resident and cur_resident is defined  %} selected="selected"{% endif %} >{{ rs.residence}}</option>
+                                    {% endfor %}
+                            
+                                </select>
+                            <input type="hidden" name="residentialstatus" id="residentialstatus" value="{% if cur_residentialstatus and cur_residentialstatus is defined %} {{cur_residentialstatus}}  {% endif %}" />
+                        </div>
+
+                        <div class="form-group row " id="foreign_div" style="display: none;">
+                            <label for="inputState">If Foreigner, does customer's country of citizenship feature in FATF,
+                            EU,
+                            OFAC, UN Black List, Grey List?</label>
+                            <select id="foreigncitizenshipscore" name="foreigncitizenshipscore" class="form-control">
+                                <option selected="selected" value="">Choose option...</option>
+                            
+                                {% for fr in foreigncitizenshipscore %}
+                                <option value = "{{fr.score}}" {% if fr.score == cur_fr_score and cur_fr_score is defined  %} selected="selected"{% endif %}>{{ fr.yesno}}</option>
+                        
+                                {% endfor %}
+                            
+                            </select>
+                            <input type="hidden" name="foreignercountryinblacklist" id="foreignercountryinblacklist" value="{% if cur_foreignercountryinblacklist and cur_foreignercountryinblacklist is defined %} {{foreignercountryinblacklist}}  {% endif %}" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="row">
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                            </div>
+
+                        </div>
+                        <div class="form-row">
+                            <div class="row">
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+            <div class="masonry-item col-md-6 ">
+                <div class="bgc-white p-20 bd ">
+                    <h6 class="c-grey-900 ">Relationship Risk</h6>
+                    <div class="mT-30 ">
+                        <div class="form-group row ">
+                            <label for="inputState ">Is the customer a PEP/Chief or High Official of International Organization as per BFIU Circular?</label>
+                            <select name="relationship_risk_pepscore" id="relationship_risk_pepscore" class="form-control ">
+                                <option selected="selected" value="">Choose...</option>
+                                {% for pr in pepscore %}
+                                    <option value="{{ pr.score }}"  {% if pr.score == cur_pepscore and cur_pepscore is defined  %} selected="selected"{% endif %}  >{{ pr.yesno }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="customerpep" id="customerpep" value="{% if cur_customerpep and cur_customerpep is defined %} {{cur_customerpep}}  {% endif %}" />
+
+                        </div>
+                        <div class="form-group row ">
+                            <label for="inputState ">Is the customer family/close associates related to PEP/Chief or High Official of International Organization?</label>
+
+                            <select name="relationship_risk_rpepscore" id="relationship_risk_rpepscore" class="form-control ">
+                            <option selected="selected" value="">Choose option...</option>
+                                    {% for rpr in rpepscore %}
+                                    <option value="{{ rpr.score }}" {% if rpr.score == cur_rpepscore and cur_rpepscore is defined  %} selected="selected"{% endif %}  >{{ rpr.yesno }}</option>
+                                    {% endfor %}
+                            
+                            </select>
+                            <input type="hidden" name="customerrelatedtopep" id="customerrelatedtopep" value="{% if cur_customerrelatedtopep and cur_customerrelatedtopep is defined %} {{cur_ustomerrelatedtopep}}  {% endif %}" />
+
+                        </div>
+
+                        <div class="form-group ">
+                            <label for="inputState ">Is customer a IP? Or his family/close associates related to IP?</label>
+
+                            <select name="relationship_risk_cusipscore" id="relationship_risk_cusipscore" class="form-control ">
+                            <option selected="selected " value="">Choose option...</option>
+                            {% for cusip in cusipscore %}
+                                    <option value="{{ cusip.score }}"  {% if cusip.score == cur_cusipscore and cur_cusipscore is defined  %} selected="selected"{% endif %} >{{ cusip.yesno }}</option>
+                            {% endfor %}
+                            
+                        </select>
+
+                            <input type="hidden" name="customerip" id="customerip" value="{% if cur_customerip and cur_customerip is defined %} {{cur_customerip}}  {% endif %}" />
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+            <div class="masonry-item col-md-6 ">
+                <div class="bgc-white p-20 bd ">
+                    <h6 class="c-grey-900 ">Business and Occupation Risk</h6>
+                    <div class="mT-30 ">
+                        <div class="form-group row ">
+                            <label for="inputState ">Customer's of Business</label>
+
+                            <select name="cus_business" id="cus_business" class="form-control ">
+                                <option selected="selected " value="">Choose...</option>
+                                {% for curscore in cusrbusiskscore %}
+                                    <option value="{{ curscore.score }}"  {% if curscore.score == cur_buis_score and cur_buis_score is defined  %} selected="selected"{% endif %} >{{ curscore.business }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="customerbusiness" id="customerbusiness" value="{% if cur_customerbusiness and cur_customerbusiness is defined %} {{cur_customerbusiness}}  {% endif %}" />
+
+                        </div>
+
+                        <div class="form-group row " id="others_risk" style="display:none;">
+                            <!--<label for="inputState ">Others Risk</label>-->
+                            <input placeholder="Please describe others risk " type="text " name="others_risk_info" class="form-control " id="others_risk_info" value="{% if cur_others_risk_info is defined %} {{cur_others_risk_info}}  {% endif %}">
+                        </div>
+
+                        <div class="form-group row ">
+                            <label for="inputState ">Customer's of Occupation</label>
+                            <select name="cus_occupation" id="cus_occupation" class="form-control ">
+                            <option selected="selected " value="">Choose option...</option>
+                                {% for occup in cusoccupationscore %}
+                                    <option value = "{{occup.score}}" {% if occup.score == cur_occupation_score and cur_occupation_score is defined  %} selected="selected"{% endif %}>{{ occup.occupation}}</option>
+                            
+                                {% endfor %}
+                            
+                        </select>
+                            <input type="hidden" name="customeroccupation" id="customeroccupation" value="{% if cur_customeroccupation and customeroccupation is defined %} {{customeroccupation}}  {% endif %}" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="row">
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+
+            <div class="masonry-item col-md-6 ">
+                <div class="bgc-white p-20 bd ">
+                    <h6 class="c-grey-900 ">Transactional Risk</h6>
+                    <div class="mT-30 ">
+                        <div class="form-group ">
+                            <label for="inputState ">What is client's Average Yearly Transactions Worth?</label>
+                            <select name="transactional_risk" id="transactional_risk" class="form-control ">
+                                <option selected="selected " value="">Choose...</option>
+                                {% for tr in transactionscore %}
+                                    <option value="{{ tr.score }}" {% if tr.score == cur_transactionscore and cur_transactionscore is defined  %} selected="selected"{% endif %} >{{ tr.transactionamount }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="averageyearlytransaction" id="averageyearlytransaction" value="{% if cur_averageyearlytransaction and cur_averageyearlytransaction is defined %} {{cur_averageyearlytransaction}}  {% endif %}" />
+
+                        </div>
+                        <div class="form-row">
+                            <div class="row">
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+            <div class="masonry-item col-md-6 ">
+                <div class="bgc-white p-20 bd ">
+                    <h6 class="c-grey-900 ">Transparency Risk</h6>
+                    <div class="mT-30 ">
+                        <div class="form-group ">
+                            <label for="inputState ">Does client has provided credible source of funds ?</label>
+                            <select name="transparency_risk" id="transparency_risk" class="form-control ">
+                                <option selected="selected " value="">Choose...</option>
+                                {% for trans in transparencyscore %}
+                                    <option value="{{trans.score}}" {% if trans.score == cur_transparencyscore and cur_transparencyscore is defined  %} selected="selected"{% endif %}> {{ trans.yesno }} </option>
+                                {% endfor %}
+                            </select>
+
+                            <input type="hidden" name="crediblesourceoffund" id="crediblesourceoffund" value="{% if cur_crediblesourceoffund and cur_crediblesourceoffund is defined %} {{cur_rediblesourceoffund}}  {% endif %}" />
+
+                        </div>
+                        <div class="form-row">
+                            <div class="row">
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                                <label>&nbsp;</label>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <!-- end of bg white -->
+            </div>
+            <!-- end of div colm 6-->
+
+
+            <!-- end of row -->
+
+
+
+
+
+        </div>
+        <!-- end of section -->
+        <div class="row gap-20 ">
+            <div class="container-fluid ">
+                <div class="row ">
+                    <div class="col-md-4 ">
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+
+                        </div>
+                    </div>
+                    <div class="col-md-4 ">
+
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+                            <div class="bgc-deep-white-500 ta-c p-30 ">
+                                <button class="btn btn-primary" id="calculate" type="button ">Calculate Risk</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 ">
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row gap-20 ">
+            <div class="container-fluid ">
+                <div class="bgc-white p-20 bd ">
+                    <div class="row ">
+                        <div class="col-md-2 ">
+                            <div class=" ov-h bgc-white bd ">
+
+                            </div>
+                        </div>
+                        <div class="col-md-8 ">
+                            <div class="row ">
+                                <div class="col-md-6 mb-3 form-row ">
+                                    <label for=" ">Overall Risk Score</label>
+                                    <input type="text" class="form-control " name="overall_risk_score" id="overall_risk_score" placeholder=" Overall Risk Score " value="{{cur_overallriskscore}}" disabled>
+                                    <input type="hidden" class="form-control " name="risk_score" id="overall_risk_score_hidden" value="{{cur_overallriskscore}}">
+                                </div>
+                                <div class="col-md-6 mb-3 form-row ">
+                                    <label for="disabledTextInput">Risk Type</label>
+                                    <input type="text" name="overall_risk_type" id="risk_type" class="form-control " placeholder="Risk type " value="{{ risk_type }}" disabled>
+                                    <input type="hidden" class="form-control " name="risk_type" id="risk_type_hidden" value="{{risk_type}}">
+                                </div>
+                                <div class="col-md-6 mb-3 form-row ">
+                                    <label for="disabledTextInput ">Subjective risk type</label>
+                                    <input type="text" name="overall_subjective_risk_type_val" id="subjective_risk_type_val" class="form-control " placeholder="Subjective risk type " value=" " disabled>
+                                    <input type="hidden" class="form-control " name="subjective_risk_type_val" id="subjective_risk_type_val" value="{{subjective_risk_type}}">
+                                    <a href="#exampleModal" data-toggle="modal" data-target="#exampleModal">Change</a>
+                                    <!-- Button trigger modal -->
+                                    <!--<button type="button " class="btn btn-primary " data-toggle="modal " data-target="#exampleModal">
+                                        Change
+                                    </button>-->
+                                </div>
+
+                                <div class="col-md-6 mb-3 form-row ">
+                                    <label for="disabledTextInput ">Assessment notes</label>
+                                    <input type="text" id="assesment_notes" name="assesment_notes" class="form-control " placeholder="notes here ">
+                                </div>
+                                <div class="col-md-6 mb-3 form-row ">
+                                    <input type="hidden" id="customer_cbs_id" name="customer_cbs_id" class="form-control " value="{% if customer_cbs_basic is defined %} {{customer_cbs_basic}}  {% endif %}">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row gap-20 ">
+            <div class="container-fluid ">
+                <div class="row ">
+                    <div class="col-md-4 ">
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+
+                        </div>
+                    </div>
+                    <div class="col-md-4 ">
+
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+                            <div class="bgc-deep-white-500 ta-c p-30 ">
+                                <button class="btn btn-primary " id="addRisk" type="submit ">{{button_type}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 ">
+                        <div class="bdrs-3 ov-h bgc-white bd ">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </form>
+    <!-- End Form -->
+
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1 " role="dialog " aria-labelledby="exampleModalLabel " aria-hidden="true ">
+    <div class="modal-dialog " role="document ">
+        <div class="modal-content ">
+            <div class="modal-header ">
+                <h5 class="modal-title " id="exampleModalLabel ">Change Risk Type</h5>
+                <button type="button " class="close " data-dismiss="modal " aria-label="Close ">
+            <span aria-hidden="true ">&times;</span>
+        </button>
+            </div>
+            <div class="modal-body ">
+                <div class="form-row ">
+                    <label for="inputState ">Change Risk </label>
+
+                    <select name="sub_transparency_risk" id="sub_transparency_risk" class="form-control ">
+                       
+                        <option value="High Risk" > High Risk </option>
+                       
+                   
+                    </select>
+
+                </div>
+                <div class=" form-row ">
+                    <label for=" ">Comments</label>
+                    <input type="text " name="comments" id="comments" class="form-control form-control-lg " placeholder="Type the reason.. " value=" " required>
+                    <!-- Button trigger modal -->
+
+                </div>
+            </div>
+            <div class="modal-footer ">
+                <button type="button " class="btn btn-secondary " data-dismiss="modal" data-dismiss="modal">Close</button>
+                <button type="button " class="btn btn-primary " id="change_risk_btn" data-dismiss="modal">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="../static/js/riskform.js"></script>

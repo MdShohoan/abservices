@@ -1,0 +1,176 @@
+{% extends "layouts/base.html" %} {% block title %} Datatable {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<div class="container-fluid">
+    <h4 class="c-grey-900 mT-10 mB-30">Score List</h4>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bgc-white bd bdrs-3 p-20 mB-20"></div>
+            <h4 class="c-grey-900 mB-20">Pending Requests</h4>
+            <table id="" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description </th>
+                        <th>Score</th>
+
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>
+                            <h2>Customer Basic Account</h2>
+                        </td>
+                        <td>{{ riskgradingrequest.customerid}}</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>Product /Service Risk </h6>
+                        </td>
+                        <td>{{ riskgradingrequest.producttype}}</td>
+                        <td>{{ riskgradingrequest.producttypescore}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>Onboarding Channel Risk </h6>
+                        </td>
+                        <td>{{ riskgradingrequest.onboardingchannel}}</td>
+                        <td>{{ riskgradingrequest.onboardingchannelscore}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>Geographical Risk</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.residentialstatus}}</td>
+                        <td>{{ riskgradingrequest.residentialstatusscore}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>>Is the customer a PEP/Chief or High Official of International Organization as per BFIU Circular?</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.customerpep}}</td>
+                        <td>{{ riskgradingrequest.customerpepscore}}</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Is the customer family/close associates related to PEP/Chief or High Official of International Organization?</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.customerrelatedtopep}}</td>
+                        <td>{{ riskgradingrequest.customerrelatedtopepscore}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>Is customer a IP? Or his family/close associates related to IP?</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.customerip}}</td>
+                        <td>{{ riskgradingrequest.customeripscore}}</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Business and Occupation Risk </h6>
+                        </td>
+                        <td>{{ riskgradingrequest.customerbusiness}}</td>
+                        <td>{{ riskgradingrequest.customerbusinessscore}}</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Customer's of Occupation</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.customeroccupation}}</td>
+                        <td>{{ riskgradingrequest.customeroccupationscore}}</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Transactional Risk:What is client's Average Yearly Transactions Worth?</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.averageyearlytransaction}}</td>
+                        <td>{{ riskgradingrequest.averageyearlytransactionscore}}</td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Transparency Risk:Does client has provided credible source of funds ?</h6>
+                        </td>
+                        <td>{{ riskgradingrequest.crediblesourceoffund}}</td>
+                        <td>{{ riskgradingrequest.crediblesourceoffundscore}}</td>
+                    </tr>
+
+
+                    <tr>
+                        <td>
+                            <h6>Request by :</h6>
+                        </td>
+                        <td> {{ riskgradingrequest.requestedby}} at {{riskgradingrequest.requestdatetime.strftime('%Y-%m-%d')}}</td>
+                        <td>{{ riskgradingrequest.requestedbranch}} IP : {{riskgradingrequest.requestedip}}</td>
+                    </tr>
+
+                    {% if riskgradingrequest.authorizedby : %}
+                    <tr>
+                        <td>
+                            <h6>Authorized By</h6>
+                        </td>
+                        <td>{{riskgradingrequest.authorizedby}}</td>
+                        <td>{{ riskgradingrequest.authorizedby}} at {{ riskgradingrequest.authorizedatetime.strftime('%Y-%m-%d')}}</td>
+                    </tr>
+                    {% endif %}
+
+                    <tr>
+                        <td>
+                            <h6>Overall Score </h6>
+                        </td>
+                        <td>Risk Score</td>
+                        <td>
+                            <h4>{{ riskgradingrequest.overallriskscore}}</h4>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <h6>Overall Risk Type </h6>
+                        </td>
+                        <td>
+                            <h4>{{riskgradingrequest.risktype}}</h4>
+                        </td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6> Subjective risk type </h6>
+                        </td>
+                        <td>
+                            <h4>{{riskgradingrequest.subjectiverisktype}}</h4>
+                        </td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h6>Assessment Notes </h6>
+                        </td>
+                        <td>{{riskgradingrequest.assessmentnotes}}</td>
+                        <td></td>
+                    </tr>
+
+
+
+
+
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

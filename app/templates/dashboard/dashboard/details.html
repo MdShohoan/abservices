@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title> AB BANK : FORM-C Print  </title>
+<head>
+<link href="https://www.cssscript.com/demo/sticky.css" rel="stylesheet" type="text/css">
+<!-- Bootstrap -->
+<link rel="stylesheet" href="/static/formc/bootstrap-5.0.2/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="/static/css/bootstrap-print.min.css" media="print" />
+    
+<style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+    body {
+background-image: linear-gradient(180deg, #eee, #fff 100px, #fff);
+}
+
+.container {
+max-width: 960px;
+}
+
+.pricing-header {
+max-width: 700px;
+}
+  </style>
+</head>
+<body>
+
+    
+
+
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script src="/static/formc/bootstrap-5.0.2/js/bootstrap.js"></script>
+    <script>
+    function printData()
+    {
+       var divToPrint=document.getElementById("print-div");
+       newWin= window.open("");
+       newWin.document.write(divToPrint.outerHTML);
+       newWin.print();
+       newWin.close();
+    }
+    function updateFormc(ajaxurl)
+    {
+        
+        $.get(ajaxurl, function(data, status){
+         //alert("Data: " + data + "\nStatus: " + status);
+         conosle.log ("Data: " + data + "\nStatus: " + status);
+      });
+    
+    
+    }
+    
+    $(document).ready(function () {
+        console.log ('test');
+        let number = $('#number').html();
+        console.log (number);
+        let amount_in_words = inWords(number);
+        $('#words').html(amount_in_words);
+        console.log (amount_in_words);
+        //console.log(this.href.substring(this.href.lastIndexOf('/') + 1));
+        var url = $(location).attr('href'),
+        parts = url.split("/"),
+        last_part = parts[parts.length-1];
+        console.log (last_part);
+        ajax_url = '/dashboard/updateformc/'+last_part
+        $('button').on('click',function(){
+            
+            updateFormc(ajax_url);
+            printData();    
+        })
+    
+    });
+    
+    var a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+    var b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+    
+    function inWords (num) {
+        if ((num = num.toString()).length > 9) return 'overflow';
+        n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n) return; var str = '';
+        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+        str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'only ' : '';
+        return str;
+    }
+    
+    document.getElementById('number').onkeyup = function () {
+        document.getElementById('words').innerHTML = inWords(document.getElementById('number').value);
+    };
+    </script>
+</body>
+</html>

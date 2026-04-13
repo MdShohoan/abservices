@@ -1,5 +1,5 @@
+import os
 import re
-from flask import render_template
 import datetime
 import requests
 import random
@@ -12,6 +12,8 @@ import logging
 import logging.config
 from zeep import Client
 from zeep.transports import Transport
+import pyodbc
+#import pymssql
 
 from logging.handlers import TimedRotatingFileHandler
 import xlsxwriter
@@ -19,7 +21,11 @@ import json
 import random
 import xmltodict
 import smtplib
+#import pysftp 
 #import lib
+#import requests
+#import datetime
+#import json
 
 from email.mime.multipart import MIMEMultipart 
 from email.mime.text import MIMEText 
@@ -28,17 +34,20 @@ from email import encoders
 from smtplib import SMTPException
 
 import uuid
+from flask import render_template, send_file
 from flask import Blueprint,Markup, current_app,render_template, url_for, request,session, redirect,jsonify,redirect,flash,abort
 from flask_wtf.csrf import CSRFProtect,generate_csrf
 from flask_wtf.csrf import CSRFError
 from app.models import CUSTINFO, OTPModel,SMSINFO,OTP_HISTORY,CBS_CUSTOMERS
 
 # import the main blue print instance
-from app.main import main
-
+#from app.main.profile import profile
+#from app.main import main
 import app.utils
 from app import db 
 from app import LOG
+main = Blueprint('main', __name__, url_prefix='/')
+
 
 
 logging.getLogger("requests").setLevel (logging.WARNING)
@@ -61,65 +70,74 @@ CBS_PASSWORD    = current_app.config['CBS_PASSWORD']
 
 #print (current_app.config['EQCONNECTWSDL'])
 
+
 request_cbs_login_data = {
-	'clientAppId':eqConnectwsdl,
-	'system' :CBS_SYSTEM,
-	'unit'	: CBS_UNIT,
-	'user' :  CBS_USERNAME,
-	'pass' : CBS_PASSWORD
+    'clientAppId':'abpythonapps',
+    'system' :CBS_SYSTEM,
+    'unit'	: CBS_UNIT,
+    'user' :  CBS_USERNAME,
+    'pass' : CBS_PASSWORD
 }
+
+#print (request_cbs_login_data)
 
 dt = datetime.datetime.now()
 
-def encode(message):
-    #return message.encode('utf-16-be').hex().upper()
-    return message.encode('utf-8')
-
-@main.route("/test",methods = ['GET'])
-def test():
-
+def add_ssl_otp (response,reqid=''):
+    
     try:
-        
+    
         dt 						  = datetime.datetime.now()
-        dt2= dt.strftime("%Y%m%d%H%M%S%f")
         id 						  = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
+        print ("SMS INFO : ")
+        print (response)
+
         
-        print ("date.." +dt2 )
-        print ("id")
-        print (id)
+        print ("DB SMS INFO EXECUTED : ")
+        code = response.get("code")
+
+        print ("Code {code}")
+        print (code)
+        message = response.get("message")
+        print (message)
+        mobile = response.get("phone")
+    
+        rstatus = response.get("status")
+        if rstatus == 'success':
+            status = 1
+        else : 
+            status = 0
         
-        #r = requests.get(url="https://bkashuat.abbl.org:44344/",verify=current_app.config['SSL_CER_FILE'])
-        #print (r)
-        LOG.debug('string id %s',dt2)
-        LOG.debug('string id %s',id)
-        LOG.info('So should this')
-        LOG.warning('And this, too')
-        LOG.error('And non-ASCII stuff, too, like Øresund and Malmö')
-        #return render_template('abindex.html', error=id)
-        return render_template('abemail.html', error=id)
-        #return jsonify({"status":"success"},{"message":"Success"})
-
-        #LOG.debug("******* API CALL TEST*******")
-        '''bkash_api_url = current_app.config['BKASH_API_URL']+'/test/encryption'
-
-        headers = {"charset": "utf-8", "Content-Type": "application/json","Username":"bkashabbl","Password":"abbl@123"}
-
-        LOG.debug("******* API call for  :%s** url : *****",bkash_api_url )
-        LOG.debug("******* API headers:** paramaeter : **%s***",headers )
-        username = current_app.config['BKASH_API_URL']
-        password = current_app.config['BKASH_API_PASSWORD']
-        req_json_data = {"input": "4005457577300"}
-        LOG.debug("******* API json data:** paramaeter : **%s***",req_json_data )
-        r = requests.post(url=bkash_api_url,auth=(username,password), json=req_json_data,headers=headers)
-        LOG.debug("******* API Response for   :%s** url : **%s***",bkash_api_url,r.status_code )
-        print(r.status_code, r.reason, r.text)
-        return jsonify({"status":"success"},{"message":r.text})'''
-
+        sms_send_time = response.get("sms_send_time")
+        reference_no =response.get("reference_no")
+        return_url  =response.get("callback_url")
+        if return_url:
+            callback_url = response.get("callback_url")
+        else:
+            callback_url = ''    
+        ssl_reply_message =response.get("ssl_reference_no")
+        if reqid:
+            trackingcode = reqid
+        else:
+            trackingcode = response.get("trackingcode")
+        #ssl_sms_reply_status = response.get("ssl_sms_reply_status")
+        ssl_sms_reply_status = response.get("result")
+        now    = datetime.datetime.now()
+        created_at = now.strftime("%Y-%m-%d %H:%M:%S") 
+        print ("Call db smsinfo ")
+        print (ssl_reply_message)
+        new_sms_info = SMSINFO(id=id,code=code,mobile=mobile,message=message,status=status,sms_send_time=sms_send_time,ssl_reply_message=ssl_reply_message,ssl_sms_reply_status=ssl_sms_reply_status,created_at=created_at,trackingcode=trackingcode,callback_url=callback_url)
+        #new_sms_info = SMSINFO(id,code,mobile,message,status,sms_send_time,ssl_reply_message,ssl_sms_reply_status,created_at,trackingcode)
+        #(self,id,code,mobile,message,status,sms_send_time,ssl_reply_message,ssl_sms_reply_status,created_at,trackingcode)
+        print ("SMS INFO")
+        print (new_sms_info)
+        db.session.add(new_sms_info)
+        db.session.commit()
+        print ('db addedd')
+    
     except Exception as error:
-
         print (error)
-        return jsonify({"status":"fail"},{"message": error})
-
+        LOG.debug("***********Error :  %s ***********%s***",error,response["trackingcode"])
 
 @main.route('/home/<requestid>/', methods=['GET', 'POST'])
 def home(requestid):
@@ -149,12 +167,11 @@ def home(requestid):
     
     print (response)
     #flash ('Thank You have successfully updated your email address.  ')
-    flash(Markup('Thank You have successfully updated your email address, <br> please click <a href="https://abdirect.abbl.com/signup#!"  class="alert-link">here for internet banking</a>'))
+    #flash(Markup('Thank You have successfully updated your email address, <br> please click <a href="https://abdirect.abbl.com/signup#!"  class="alert-link">here for internet banking</a>'))
     return redirect('/')
     
+    
     #return render_template('login.html', error=error)
-
-
 
 def send_otp (account_no,customer_data = {} ) :
     #otp_code = app.utils.otpgen()
@@ -184,20 +201,24 @@ def send_otp (account_no,customer_data = {} ) :
     csmsid                   = random.randint(1, 99999999)
     
     otp_code                 = app.utils.otpgen()
-    otp_msg                  = 'Dear Customer, Your One-Time Password is '+otp_code+ '.Please use this OTP to complete the Email Update.For any Query, call: 16207'
+    #otp_msg                  = 'Dear Customer, Your One-Time Password is '+otp_code+ '.Please use this OTP to complete the Email Update.For any Query, call: 16207'
+    otp_msg                  = 'DO NOT DISCLOSE YOUR OTP TO ANYONE. Your OTP is '+otp_code+ ' to update your email This OTP will expire in 3 minutes. For any Query call 16207'
     id= requestid 
     #sms_send (phone,message,id)
     try:
         new_otp = OTPModel(id=id,mobile=mobile,email=email,code= otp_code,api_token=csrf,api_key=requestid,otp_tries=otp_tries,status=verify_status,created_at=otp_send_date,otp_request_count=otp_request_count)
         db.session.add(new_otp)
         db.session.commit()
-		#send otp
+        #send otp
         LOG.debug("****%s:**** OTP is :%s******",requestid,otp_code) 
         
-        ssl_otp_response=app.utils.send_sms_by_ssl(mobile,otp_msg)
-        
-        
-        if ssl_otp_response.get('status') == 'success':
+        #ssl_otp_response=app.utils.send_sms_by_ssl(mobile,otp_msg)
+        print ('before sms api call...')
+        ssl_otp_response=app.utils.smsnewapi(mobile,otp_msg)
+        print ('after sms api call...')
+        print (ssl_otp_response)
+        if ssl_otp_response.get('status') == 'SUCCESS':
+
             add_ssl_otp(ssl_otp_response,requestid)
             view_otp_send_date            = now.strftime("%d-%m-%Y %H:%M:%S")
             #print (view_otp_send_date)
@@ -206,15 +227,17 @@ def send_otp (account_no,customer_data = {} ) :
                                      'customer_mask_mobile':masked_mobile,
                                      'mobile' : mobile, 
                                      'customer_account_number' :masked_account_number,
-                                     'customer_name' : customer_name})
+                                     'customer_name' : customer_name,
+                                     'statement_path':''    
+                                     })
                               
-            
+            print (ssl_otp_response)
             return True,ssl_otp_response
         else : 
             return False,ssl_otp_response    
-		#lib.send_sms_by_ssl(mobile,'hello world')
+        #lib.send_sms_by_ssl(mobile,'hello world')
         #print ("CSRF3 ")
-		#print (csrf)
+        #print (csrf)
         #ssl_otp_response['trackingcode'] = requestid
         #print ("ssl insert ")
         #print (ssl_otp_response['status'])
@@ -224,8 +247,10 @@ def send_otp (account_no,customer_data = {} ) :
         #jsdata = {'baseurl': current_app.config["BASE_URL"], 'bkash_api_url':  current_app.config["BKASH_API_URL"],'otp_expire_time':current_app.config["OTP_EXPIRE_TIME"],'trackingcode':requestid,'bkash_api_username':username,'bkash_api_password':password}
         #print (jsdata)
     except Exception as e:
-        return False,ssl_otp_response
+        print ('error:')
         print (e) 
+        return False,ssl_otp_response
+        
 
 def update_email_cbs(requestid,email,custMnem):
     
@@ -274,7 +299,8 @@ def update_email_cbs(requestid,email,custMnem):
             #LOG.info('Account: %s: , Request Data : 1.session token : %s  ', custno, sessiontoken)
             #cusresult = transactionClient.service.customerDetails(**request_data)
             #LOG.info('Account: %s: , Cust details Result Data : : %s  ', custno, cusresult)
-            print ('ok')
+            print (cusresult)
+            print ('Email Update ok')
             result = client.service.logout (sessiontoken)
             LOG.debug('Account: %s: , Logout Result Data : : %s  ', requestid, result)
             return  cusresult['success']
@@ -293,6 +319,7 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
 
     try:
         customer_found = False
+        custno = ''
         session = Session ()
         session.verify = False 
         
@@ -300,21 +327,39 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
         customer_data = {}
         LOG.info("******* Api call api ,  : %s Requestid  :%s*******",account_no,requestid)
         client =Client(wsdl = eqConnectwsdl)
-        #print (client)
+        print (client)
+        print ('API CALL..')
      
         if account_no: 
             
             LOG.info("******* Api call for account 2 :%s*******",account_no)
-            custno = account_no[4:-3]
-            print ('customer')
-            print (custno)
-            LOG.info("******* Account :%s*****customer : %s**",account_no,custno)
+            #custno = account_no[4:-3]
+            #custno = account_no
+            #print ('customer')
+            #print (custno)
+            LOG.info("******* Account :%s*****customer : %s**",account_no,account_no)
             sessiontoken =  client.service.login(**request_cbs_login_data)
             print (sessiontoken)
             if sessiontoken :     
-                    LOG.info('Account: %s: , session token : %s  ', custno, sessiontoken)
+                    LOG.info('Account: %s: , session token : %s  ', account_no, sessiontoken)
                     transactionClient = Client(eqEnqurywsdl)
+
+                    request_data = { 
+                        'sessionToken' : sessiontoken,
+                        'accno' : account_no,
+                        'isEQAcc' : False
+                    }
                     
+                    LOG.info('Account: %s: , Request Data : 1.session token : %s  ', custno, sessiontoken)
+                    eqresult = transactionClient.service.customerEquationDetail(**request_data)
+                    LOG.info('Account: %s: , Custer Equation details Result Data : : %s  ', account_no, eqresult)
+                    print (eqresult)
+                    if eqresult['success'] == True:
+                        custno = eqresult['customerId']
+
+                    if not custno:
+                       return customer_found,customer_data 
+
                     
                     request_data = { 
                         'sessionToken' : sessiontoken,
@@ -331,7 +376,7 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
                         email1 = cusresult['email1']
                         if not cusresult['mobile']:
                             
-                            mobile = '01673615816'
+                            mobile = ''
                         else:
                             mobile = cusresult['mobile']
                         #print ("customer name  : " + cusresult['customerName'])
@@ -436,6 +481,7 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
                         status = 1 
                         requestid = requestid
                         csrf = csrf
+
                         customer_data =  {
                                     
                                     'retMessage': cusresult['retMessage'],
@@ -468,7 +514,7 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
                             new_customer_request = CBS_CUSTOMERS(id=id,basicNumber=basicNumber,businessPhone=businessPhone,customerName= customerName,customerType=customerType,customerTypeDesc=customerTypeDesc,dateOfBirth=dateOfBirth,email1=email1,email2=email2,homePhone=homePhone,idDocCode=idDocCode,idExpiryDate=idExpiryDate,mobile=mobile,residenceCountry=residenceCountry,status=status,taxid=taxid,created_at=dt,requestid= requestid,csrf=csrf)
                             db.session.add(new_customer_request)
                             db.session.commit()
-		                    #send otp
+                            #send otp
                             LOG.debug("****%s:**** New custommer request is :%s******",requestid,customer_data) 
                         except Exception as e:
                             print (e)
@@ -483,7 +529,9 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
                     result = client.service.logout (sessiontoken)
                     LOG.debug('Account: %s: , Logout Result Data : : %s  ', custno, result)
                     return customer_found,customer_data
-
+            else:
+                print ('Account Login Info: ')
+                return customer_found,customer_data 
 
         else:
             LOG.info("******* Account :%s*****Cannot be blank : %s**",account_no)
@@ -511,7 +559,8 @@ def email(requestid,request_type):
         alert_type = 'email'
         #message = " "
         otp_code                 = app.utils.otpgen()
-        message                  = 'Dear Customer, Your One-Time Password is '+otp_code+ '.Please use this OTP to complete the Email Update.For any Query, call: 16207'
+        #message                  = 'Dear Customer, Your One-Time Password is '+otp_code+ '.Please use this OTP to complete the Email Update.For any Query, call: 16207'
+        message                  = 'DO NOT DISCLOSE YOUR OTP TO ANYONE. Your OTP is '+otp_code+ ' to update your email. This OTP will expire in 3 minutes. For any Query call 16207'
         id= requestid
         csrf =   generate_csrf()
         dt = datetime.datetime.now()
@@ -532,7 +581,8 @@ def email(requestid,request_type):
             
             masked_mobile =  item.mobile
             masked_account_number = item.basicNumber
-            msg             = "An OTP has been send to your Email. Please verify. "
+            #msg             = "An OTP has been send to your Email. Please verify. "
+            msg                  = 'DO NOT DISCLOSE YOUR OTP TO ANYONE. An OTP has been send to your Email. Please verify. For any Query call 16207'
             accnt_no        = item.basicNumber
             customer_name   =  item.customerName
             #requestid       = customer_data.get('requestid')
@@ -547,7 +597,7 @@ def email(requestid,request_type):
             #mobile = '01673615834'
             otp_request_count = 1
             otp_tries = 0
-			#message = 'test'
+            #message = 'test'
             csrf =   generate_csrf()
             print ('csrf.........')
             session['session_csrf']   = csrf
@@ -555,7 +605,7 @@ def email(requestid,request_type):
             new_otp = OTPModel(id=id,mobile=mobile,email=email,code= otp_code,api_token=csrf,api_key=requestid,otp_tries=otp_tries,status=status,created_at=dt,otp_request_count=otp_request_count)
             db.session.add(new_otp)
             db.session.commit()
-			#send otp
+            #send otp
             LOG.debug("****%s:**** OTP is :%s******",requestid,otp_code) 
             #jsdata          = {'baseurl': current_app.config["BASE_URL"] }
             LOG.debug('Verify account no %s : customer data :%s ',accnt_no,item)
@@ -599,26 +649,22 @@ def email(requestid,request_type):
 
     else:
         request_type    = 'email'
-        return render_template('email_entry.html', requestid=requestid,type=request_type)
+        return render_template('profile/email_entry.html', requestid=requestid,type=request_type)
         #return render_template('email.html', requestid=requestid,type=request_type)
 
 
-
-
 @main.route('/', methods=['GET', 'POST'])
-#@main.route("/<requestid>/",methods = ['GET'])
 def index():
-
+    
     error = None
     customer_found = False
+    
     if request.method == 'POST':
-
-        otp_result = False
-        ssl_otp_response = {}
-        accnt_no = request.form.get('accnt_no')
+        otp_result          = False
+        ssl_otp_response    = {}
+        accnt_no            = request.form.get('accnt_no')
         frm_csrf_token =  request.form.get('csrf_token') 
         LOG.debug('Verify account no %s',accnt_no )
-        
         csrf =   generate_csrf()
         dt = datetime.datetime.now()
         #dt 						  = datetime.datetime.now()
@@ -627,6 +673,7 @@ def index():
         
         requestid = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
         customer_found,customer_data = do_account_verifiy(requestid,accnt_no,csrf)
+        print (customer_found)
         LOG.debug('Verify account no %s : customer data :%s ',accnt_no,customer_data)
         if customer_found : 
             
@@ -639,10 +686,10 @@ def index():
             #return render_template('otp.html')
             LOG.debug('Verify account no %s : customer data :%s ',accnt_no,customer_data)
             otp_result,ssl_otp_response = send_otp (accnt_no,customer_data)
-            
+            print (otp_result)
             #LOG.debug('Verify account no %s : SSL response data : ',accnt_no,ssl_otp_response )
             if otp_result:
-                LOG.debug('Verify account no  2e       %s : SSL response data :%s ',accnt_no,ssl_otp_response )
+                LOG.debug('Verify account no %s : SSL response data :%s ',accnt_no,ssl_otp_response )
                 view_otp_send_date = ssl_otp_response['view_otp_send_date']
                 masked_mobile = ssl_otp_response['customer_mask_mobile']
                 masked_account_number = ssl_otp_response['customer_account_number']
@@ -659,7 +706,7 @@ def index():
                 jsdata = {'baseurl': current_app.config["BASE_URL"],'otp_expire_time':current_app.config["OTP_EXPIRE_TIME"],'trackingcode':requestid}
                 
                 id 						  = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
-                new_request = CUSTINFO(id=id,account_no=basicNumber,customer_name = customer_name,mobile=mobile,email= '',code='',api_token=requestid,api_key=csrf,created_at=dt,sms_verify_status=0,email_verify_status=0,status=0)
+                new_request = CUSTINFO(id=id,account_no=basicNumber,customer_name = customer_name,mobile=mobile,email= '',code='',api_token=requestid,api_key=csrf,created_at=dt,sms_verify_status=0,email_verify_status=0,status=0,statement_path='')
                 db.session.add(new_request)
                 db.session.commit()
                 
@@ -668,365 +715,12 @@ def index():
                 return render_template('otp.html', otp_send_date = view_otp_send_date,
                                         customer_mask_mobile=masked_mobile,mobile=mobile,customer_name=customer_name,customer_account_number=masked_account_number,csrf=csrf,message=msg,trackingcode=requestid,type=request_type,jsdata=jsdata)
 
-        return render_template('abemail.html')
+        return render_template('profile/index.html')
         #return render_template('account.html')
     else:
         #flash('Enter Account Number')
         #return render_template('account.html')
-        return render_template('abemail.html')
-    #if request.method == 'GET':
-     
-
-    #print ("Hello World !!!! ")
-    #LOG.debug("***********************Start*********:*******")
-    #LOG.debug('This message should go to the log file')
-    #LOG.info('So should this')
-    #LOG.warning('And this, too')
-    #LOG.error('And non-ASCII stuff, too, like Øresund and Malmö')
-    
-    
-    #return jsonify({"message": f"OTP not generated"},{"status":" fail"})
-    
-    '''session.permanent = True
-    args = request.args
-    LOG.debug("***********************Start*********:%s*******",requestid)
-    
-    if requestid : 
-        try:
-            LOG.debug("******* trackingid :%s*******",requestid)
-            # test purpose 
-           
-            #mobile  = "8801791002353"
-            #mobile  = "8801711900908"
-
-            #accountNumber = "4005116349300"
-            #dataAvailable = True
-            #email         = "noreply@abbl.com"
-            #customer_name = "Saidur Rahman"
-            accountNumber = '' 
-            
-
-            #****************************#
-            
-            #utils.send_sms_by_ssl('8801673615813','hello world')
-            #app.logger.info('Processing default request')
-            bkash_api_url = current_app.config['BKASH_API_URL']+'/info'
-            
-            username = current_app.config['BKASH_API_USERNAME']
-            password = current_app.config['BKASH_API_PASSWORD']
-            
-            headers = {"charset": "utf-8", "Content-Type": "application/json","Username":username,"Password":password}
-            LOG.debug("******* API call for  :%s** url : *****",bkash_api_url )
-            LOG.debug("******* API headers:** paramaeter : **%s***",headers )
-            
-            request_type= requestid[:2]
-            LOG.debug("******* Request Type :%s*******",request_type)
-            session['trackingcode']   = requestid 
-            #create_row_data = {"requestId":"LN1622139354657"}
-            create_row_data = {"requestId":requestid}
-            print(create_row_data)
-            #print ('test sms')
-            LOG.debug("******* API call for  :%s** url : **%s***",requestid,bkash_api_url )
-            LOG.debug("******* API call for  :%s** paramaeter : **%s***",requestid,create_row_data )
-            #username = current_app.config['BKASH_API_USERNAME']
-            #password = current_app.config['BKASH_API_PASSWORD']
-            #r = requests.post(url=bkash_api_url,auth=HTTPBasicAuth(username,password), json=create_row_data)
-            r = requests.post(url=bkash_api_url,auth=(username,password), json=create_row_data,headers=headers)
-            print (requestid)
-            LOG.debug("******* API Response for   :%s** url : **%s***",requestid,r.status_code )
-            print(r.status_code, r.reason, r.text)
-            if r.status_code == 200 :
-                records = json.loads(r.text)
-                dataAvailable=records["dataAvailable"]
-                if dataAvailable:
-                    
-                    mobile  = records['mobile']
-                    if mobile[0:2] != "88":
-                        mobile = '88'+mobile
-
-
-                    print (mobile)
-                    accountNumber = records['account']
-                    #print (masked_account_number)
-                    email                    = 'noreply@abbl.com'
-                    #index.logger.info('Info level log')
-                    customer_name =records["name"]
-                    #customer_name = 'Missing Name'
-                else:
-                    
-                    #utils.
-                    otp_expired_status,url = app.utils.otpErroUrl (request_type,bkash_api_url,requestid)
-                    LOG.debug("****Error  :%s ********redirect url  :%s******",requestid,url)
-                    #r = requests.get(url)
-                    #return redirect(url)
-                    #return jsonify({"status":"fail"},{"redirectUrl":url},{"message": f"Tracking Code Not Found . "})
-                    #return jsonify({"message": f"Sorry Account not found"},{"status":" fail"})
-            else:
-                otp_expired_status,url = app.utils.otpErroUrl (request_type,bkash_api_url,requestid)
-                LOG.debug("****Error  :%s ********redirect url  :%s******",requestid,url)
-                #r = requests.get(url)
-                return redirect(url)
-
-        except Exception as error:  
-            #temporaririly added 
-            mobile  = "8801673615816"
-            #mobile  = "8801791002353"
-            #mobile  = "8801711900908"
-            accountNumber = "4005116349300"
-            dataAvailable = True
-            email         = "noreply@abbl.com"
-            customer_name = "******"
-
-            
-            LOG.debug("****Error  :  %s ********for : %s******",error,requestid)
-            #app.logger.info('%s logged in successfully', user.username)
-            print (error)
-    '''
-    '''if len(args) > 1 :
-        
-            if "name" in args:
-                customer_name = args["name"]
-    
-            if "mobile" in args:
-                mobile = args["mobile"]
-        
-            if "account" in args:
-                accountNumber = args["account"]
-
-            if "email" in args: 
-                email = args["email"]
-    '''
-    
-    '''if not accountNumber:
-        LOG.debug("****Error  :  %s ********for : %s******",requestid)
-        #LOG.debug("***********Error : accountNumber :%s** Not Found ***",accountNumber)
-        
-        return jsonify({"message": f"Sorry Account not found"},{"status":" fail"})   
-    
-    LOG.debug("****%s**** Mobile:%s******",requestid,mobile)
-    LOG.debug("****%s**** Account Number:%s******",requestid,accountNumber)
-    LOG.debug("****%s**** Customer Name:%s******",requestid,customer_name)
-    LOG.debug("****%s**** Email:%s******",requestid,email)
-    
-    #print (current_app.config['DEBUG'])
-    #print (app.config['DEBUG'])
-    #logger.info('Start:')
-    #accountNumber = "3456123434561234"
-    otp_code                 = app.utils.otpgen()
-    now                      = datetime.datetime.now()
-    otp_send_date            = now.strftime("%Y-%m-%d %H:%M:%S")
-    view_otp_send_date            = now.strftime("%d-%m-%Y %H:%M:%S")
-    print (view_otp_send_date)
-    
-    unmasked                 = str(accountNumber)
-    masked_account_number    = unmasked[0:3]+len(unmasked[:-8])*"*"+unmasked[-4:]
-    masked_mobile            = mobile[-3:].rjust(len(mobile), "*")
-    csmsid                   = random.randint(1, 99999999)
-	#print (mobile)
-	#id = 1
-	#id = uuid.uuid4()
-    dt = datetime.datetime.now()
-    id = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
-    #mobile = '01673615834'
-    otp_request_count = 1
-    otp_tries = 0
-    #message = 'test'
-    csrf =   generate_csrf()
-    print ('csrf.........')
-    session['session_csrf']   = csrf
-    status = 0
-    #sms_send (phone,message,id)
-    if request_type =="LN":
-        msg = 'By Submitting OTP you are agreeing to link AB Bank Account with bKash Account.'
-        otp_msg = 'Dear Customer, Your OTP to link your AB Bank and bKash Account is '+otp_code+ '. For any Query, call: 16207'
-    else:
-        msg = 'By submitting OTP you are agreeing to Add Money to bKash from AB Bank Account'
-        otp_msg = 'Dear Customer, Your OTP to add money to bKash from AB Bank Account is '+otp_code+ '. For any Query, call: 16207'
-    try:
-        new_otp = OTPModel(id=id,mobile=mobile,email=email,code= otp_code,api_token=csrf,api_key=requestid,otp_tries=otp_tries,status=status,created_at=otp_send_date,otp_request_count=otp_request_count)
-        db.session.add(new_otp)
-        db.session.commit()
-		#send otp
-        LOG.debug("****%s:**** OTP is :%s******",requestid,otp_code) 
-        
-        ssl_otp_response=app.utils.send_sms_by_ssl(mobile,otp_msg)
-		#lib.send_sms_by_ssl(mobile,'hello world')
-        #print ("CSRF3 ")
-		#print (csrf)
-        #ssl_otp_response['trackingcode'] = requestid
-        print ("ssl insert ")
-        print (ssl_otp_response['status'])
-        print(ssl_otp_response)
-        add_ssl_otp(ssl_otp_response,requestid)
-
-        jsdata = {'baseurl': current_app.config["BASE_URL"], 'bkash_api_url':  current_app.config["BKASH_API_URL"],'otp_expire_time':current_app.config["OTP_EXPIRE_TIME"],'trackingcode':requestid,'bkash_api_username':username,'bkash_api_password':password}
-        print (jsdata)
-        
-        
-        return render_template('otp.html', otp_send_date = view_otp_send_date,customer_mask_mobile=masked_mobile,mobile=mobile,customer_name=customer_name,customer_account_number=masked_account_number,
-        csrf=csrf,message=msg,trackingcode=requestid,type=request_type,jsdata=jsdata)
-        #print ('hello')
-    except Exception as error:
-        print (error)
-        LOG.debug("***********Error :  %s ***********%s***",error,requestid)
-        
-        return jsonify({"message": f"OTP not generated"},{"status":" fail"})
-        #return render_template('otp.html', otp_send_date = otp_send_date,customer_mask_mobile=masked_mobile,mobile=mobile,customer_name=customer_name,customer_account_number=masked_account_number,csrf=csrf)
-	
-    else:
-        #LOG.debug("*********** Tracking ID not send **************")
-        LOG.warning("****Error  :  %s  tracking id not found ******",requestid)
-        return jsonify({"message": f"OTP not generated"},{"status":" fail"})'''
-
-
-@main.route("/resend/",methods = ['POST'])
-def otp_resend():
-    
-    LOG.debug("*********************** OTP Resend Start ****************")
-    
-    if request.method == "POST":
-
-        print ('resend call ')
-        try:
-            csrf = request.form['csrf_token']
-            #session['session_csrf']   = csrf
-            trackingcode = request.form['trackingcode']
-            mtype = request.form['type']
-            mobile = request.form['mobile_number']
-            request_type = trackingcode[:2]
-            LOG.debug("***********************Tracking Code : *********:%s*******",trackingcode)
-            
-            LOG.debug("***********************%s: ***** UserOTP Request ****:%s*******",trackingcode,request_type)
-            LOG.debug("** Tracking COde  :%s,*OTP:%s,* Request Type****:%s*******",trackingcode,mobile,request_type)
-            
-            db_result_item = OTPModel.query.filter(OTPModel.mobile == mobile,OTPModel.api_key==trackingcode).order_by(OTPModel.id.desc()).first()
-            LOG.debug("*****Check OTP Limit:***trackingcode:******:%s OTP Request:*****%s*",trackingcode,db_result_item.otp_request_count)
-            print (db_result_item)
-            
-            if db_result_item:
-                otp_limit_status,url = app.utils.checkOTPLimitExceed(trackingcode,current_app.config['MAX_OTP_LIMIT'],db_result_item.otp_request_count,current_app.config['BKASH_API_URL'],request_type)
-                opt_limit_url = url
-                
-                if otp_limit_status: 
-                    #opt_limit_url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
-                    session.pop('trackingcode', None)
-                    session.pop('session_csrf', None) 
-                    return jsonify({"status":"fail"},{"redirectUrl":url},{"message": f"Maximum 3 times you can try . "})
-            
-                #LOG.debug("**Update DB Status ***********")
-                #db_result_item.otp_request_count = db_result_item.otp_request_count + 1
-                #db.session.commit()
-            
-            print('request')
-            #csrf 	= request.form['csrf_token']
-            print ('csrf ...')
-            print (csrf)
-            #if not csrf:
-            #csrf =   generate_csrf()
-            
-            print ('here')
-            otp_code 				  = app.utils.otpgen()
-            print ("OTP CODE: " + otp_code)
-            LOG.debug("*******%s:****************Re-Send OTP Code : *********:%s*******",trackingcode,otp_code)
-            
-            if request_type =="LN":
-                msg = 'By Submitting OTP, You are agreeing to link AB Bank Account with bKash Account.'
-                otp_msg = 'Dear Customer, Your OTP '+otp_code+ ' to link AB Bank Account with bKash Account. For any Query, call: 16207'
-            else:
-                msg = 'By submitting OTP you are agreeing to add money to bKash from AB Bank Account'
-                otp_msg = 'Dear Customer, Your OTP '+otp_code+ ' to add money to bKash from AB Bank Account. For any Query, call: 16207'
-            
-            now                       = datetime.datetime.now()
-            otp_send_date             = now.strftime("%Y-%m-%d %H:%M:%S")
-            csmsid                    = random.randint(1, 99999999)
-            dt 						  = datetime.datetime.now()
-            id 						  = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
-            mobile 					  = mobile
-            email 					  = 'no-reply@abbl.com'
-            otp_tries 				  = db_result_item.otp_tries
-            otp_request_count         = db_result_item.otp_request_count + 1 
-            session['session_csrf']   = csrf
-            status 					  = 0
-            
-            print (otp_code)
-            new_otp = OTPModel(
-                    id=id,
-                    mobile = mobile,
-                    email   =email,
-                    code    = otp_code,
-                    api_token = csrf,
-                    api_key = trackingcode,
-                    otp_tries = otp_tries,
-                    status = status,
-                    created_at = otp_send_date,
-                    otp_request_count = otp_request_count
-            )
-            db.session.add(new_otp)
-            db.session.commit() 
-            
-            #subject = 'your otp'
-            #message = 'Your otp is ' + otp_code
-            #app.utils.send_email_alert(subject,email,message,id)
-
-            print ('successfully added')
-            ssl_otp_response=app.utils.send_sms_by_ssl(mobile,otp_msg)
-		    #lib.send_sms_by_ssl(mobile,'hello world')
-            #print ("CSRF3 ")
-		    #print (csrf)
-            print ("ssl insert ")
-            print (ssl_otp_response['status'])
-            print(ssl_otp_response)
-            add_ssl_otp(ssl_otp_response,trackingcode)
-
-
-            return jsonify({"message": f"OTP  generated"},{"status":" success"})
-        except Exception as error:
-
-            print (error)
-            LOG.debug("******* %s :****************OTP error Message : *******",error)
-            return jsonify({"message": f"OTP not generated"},{"status":" fail"})
-
-    else :
-
-        LOG.debug("***********************OTP error Not POST METHOD *********")
-        return jsonify({"message": f"OTP Not send"},{"satatus":" fail"})	
-
-
-
-
-@main.route("/cancel/",methods = ['GET', 'POST'])
-def otp_cancel():
-    if request.method == "POST":
-        try:
-            csrf = request.form['csrf_token']
-            trackingcode = request.form['trackingcode']
-            mtype = request.form['type']
-            request_type = trackingcode[:2]
-            print ("CSRF : " + csrf)
-            print ("tracking code: " +trackingcode)
-            print ("request type  : "+request_type)
-            LOG.debug("***********************%s: ***** User  OTP Cancel ***********",trackingcode)
-            LOG.debug("** Tracking COde  :%s,* Request Type****:%s*******",trackingcode,request_type)
-            if (request_type == 'LN'):
-                resultCode = "B1103"
-                #url = current_app.config['BKASH_API_URL']+'/account/link/redirect?id='+trackingcode+'&resultcode='+resultCode
-                url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
-            else : 
-                resultCode = "B1405"
-                #url = current_app.config['BKASH_API_URL']+'/add/money/redirect?id='+trackingcode+'&resultcode='+resultCode
-                url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
-            print ("return url : " + url)
-            LOG.debug("***********************%s: ***** Redirect URL****:%s*******",trackingcode,url)
-            session.pop('trackingcode', None)
-            session.pop('session_csrf', None)
-            return jsonify({"status":"success"},{"redirectUrl":url} )
-        
-        
-        except Exception as error:
-            print (error)
-
-
-
+        return render_template('landing.html')
 
 @main.route("/verify/<code>/<type>/",methods = ['GET', 'POST'])
 def otp_verify(code,type):
@@ -1034,11 +728,10 @@ def otp_verify(code,type):
     #if not session['session_csrf']:
         #print ('session expired')
         #return jsonify({"error": f"Item {code} not found"})
-    
     LOG.debug("***********************%s: *****verify  OTP start  ***********",code)
-    
     print (type)
     print (request.method)
+    
     if request.method == "POST":
         try:
             #item = OTPModel.query.filter_by(code=code).first_or_404()
@@ -1087,7 +780,11 @@ def otp_verify(code,type):
             LOG.debug("***********************Check OTP Expired result*********:%s*******",trackingcode)
             otp_expired_status,url = app.utils.checkOTPExpired(trackingcode,db_result_item.created_at,current_app.config['OTP_EXPIRE_TIME'])
             
-            #url = url + 'email/' + trackingcode
+
+            url = current_app.config["BASE_URL"]
+            #url = url + 'email/'+trackingcode
+            #print ('*************url:********** ')
+            #print (url)
             if otp_expired_status:
                 
                 LOG.debug("***********************Get OTP Error**:%s**,redirect url:***%s**",trackingcode,url)
@@ -1099,6 +796,20 @@ def otp_verify(code,type):
             
             otp_limit_status,url = app.utils.checkOTPLimitExceed(trackingcode,current_app.config['MAX_OTP_LIMIT'],db_result_item.otp_tries)
             
+            print (request_type)
+            
+            if (request_type == 'sms'):
+                #url = url + 'profile/email/' + trackingcode+'/'+request_type
+                #url = url + 'email/' + trackingcode+'/'+request_type
+                url = url + 'profile/email/'+trackingcode
+            elif(request_type=='tin'):
+                url = url + 'tin/uploader/'+trackingcode
+            else:
+                #url = url+'profile/home/'+ trackingcode+'/'
+                url = url+'home/'+ trackingcode+'/'
+
+
+
             if otp_limit_status: 
                 #opt_limit_url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
                 LOG.debug("***********************OTP Limit Error**:%s**,redirect url:***%s**",trackingcode,url)
@@ -1123,12 +834,18 @@ def otp_verify(code,type):
                 #CUSTINFO.query.filter()
                 replyItem = SMSINFO.query.filter(SMSINFO.trackingcode == trackingcode).first()
                 
+                if (request_type == 'sms'):
+                    #url = url + 'profile/email/' + trackingcode+'/'+request_type
+                    #url = url + 'email/' + trackingcode+'/'+request_type
+                    url = url + 'profile/email/'+trackingcode
+                elif(request_type=='tin'):
+                    url = url + 'tin/uploader/'+trackingcode
+                else:
+                    #url = url+'profile/home/'+ trackingcode+'/'
+                    url = url+'home/'+ trackingcode+'/'
+                
                 if replyItem.message == "Verify":
-                    #url = replyItem.callback_url
-                    #url  = url
-                    url = url + 'email/' + trackingcode+'/'+request_type
-
-
+                    #url = url + 'profile/email/' + trackingcode+'/'+request_type
                     return jsonify({"status":"success"},{"redirectUrl":url},item.serialize )
                     #return jsonify({"status":"warning"},{"resultCode":"abcustom"},{"message": f"OTP  {code} does not match. please try again."})        
 
@@ -1143,10 +860,7 @@ def otp_verify(code,type):
                         url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
                     '''
                     
-                    if (request_type == 'sms'):
-                        url = url + 'email/' + trackingcode+'/'+request_type
-                    else:
-                        url = url+'home/'+ trackingcode+'/'
+                    
                     
                     response = {
                         'status': 'success',
@@ -1249,109 +963,47 @@ def otp_verify(code,type):
         return {"message": "success"}
 
 
-def add_otp (mobile,email,code,api_token,api_key,otp_tries):
-
-    id =  random.randint(10000000,99999999)
-    mobile = '01673615825'
-    email = 'thinker.bijon@gmail.com'
-    code = '1234'
-    api_token = '123456'
-    api_key = '12345678'
-    otp_tries = 1
-    status = 1
-    now=datetime.datetime.now()
-    created_at =  now.strftime("%Y-%m-%d %H:%M:%S")
-
-    new_otp = OTPModel(
-                    id=id,
-                    mobile = mobile,
-                    email=email,
-                    code = code,
-                    api_token = api_token,
-                    api_key = api_key,
-                    otp_tries = otp_tries,
-                    status = status,
-                    created_at = created_at 
-    )
-
-    #db.session.add(new_otp)
-    #db.session.commit()
-
-def add_ssl_otp (response,reqid=''):
-    
+@main.route("/info",methods = ['GET'])
+def info():    
+    print ('test info')
+    api_response = False
+    empty_none_value = ""
+    null_value  = "NULL"
+    requestid = '123142'
+    email ='saidur@abbl.com'
+    custMnem = '116349'
     try:
-    
-        dt 						  = datetime.datetime.now()
-        id 						  = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
-        print ("SMS INFO : ")
-        print (response)
-
-        
-        print ("DB SMS INFO EXECUTED : ")
-        code = response.get("code")
-
-        print ("Code {code}")
-        print (code)
-        message = response.get("message")
-        print (message)
-        mobile = response.get("phone")
-    
-        rstatus = response.get("status")
-        if rstatus == 'success':
-            status = 1
-        else : 
-            status = 0
-        
-        sms_send_time = response.get("sms_send_time")
-        reference_no =response.get("reference_no")
-        return_url  =response.get("callback_url")
-        if return_url:
-            callback_url = response.get("callback_url")
-        else:
-            callback_url = ''    
-        ssl_reply_message =response.get("ssl_reference_no")
-        if reqid:
-            trackingcode = reqid
-        else:
-            trackingcode = response.get("trackingcode")
-        #ssl_sms_reply_status = response.get("ssl_sms_reply_status")
-        ssl_sms_reply_status = response.get("result")
-        now    = datetime.datetime.now()
-        created_at = now.strftime("%Y-%m-%d %H:%M:%S") 
-        print ("Call db smsinfo ")
-        print (ssl_reply_message)
-        new_sms_info = SMSINFO(id=id,code=code,mobile=mobile,message=message,status=status,sms_send_time=sms_send_time,ssl_reply_message=ssl_reply_message,ssl_sms_reply_status=ssl_sms_reply_status,created_at=created_at,trackingcode=trackingcode,callback_url=callback_url)
-        #new_sms_info = SMSINFO(id,code,mobile,message,status,sms_send_time,ssl_reply_message,ssl_sms_reply_status,created_at,trackingcode)
-        #(self,id,code,mobile,message,status,sms_send_time,ssl_reply_message,ssl_sms_reply_status,created_at,trackingcode)
-        print ("SMS INFO")
-        print (new_sms_info)
-        db.session.add(new_sms_info)
-        db.session.commit()
-        print ('db addedd')
-    
-    except Exception as error:
-        print (error)
-        LOG.debug("***********Error :  %s ***********%s***",error,response["trackingcode"])
-
-
-@main.errorhandler(CSRFError)
-def handle_csrf_error(e):
-    #print ('error....')
-    #print (e)
-    #print (e.description)
-    '''trackingcode =  session['trackingcode']
-    request_type= trackingcode[:2]
-    if (request_type == 'LN'):
-        resultCode = "B1101"
-        #url = current_app.config['BKASH_API_URL']+'/account/link/redirect?id='+trackingcode+'&resultcode='+resultCode
-        url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
-    else : 
-        resultCode = "B1403"
-        #url = current_app.config['BKASH_API_URL']+'/add/money/redirect?id='+trackingcode+'&resultcode='+resultCode
-        url = app.utils.getRedirectUrl(current_app.config['BKASH_API_URL'],request_type,resultCode,trackingcode)
-
-    return jsonify({"status":"fail"},{"redirectUrl":url},{"message": f"OTP page session expired.  "})'''
-
-    return jsonify({"status":"fail"},{"message": f"OTP page session expired.  "})
-
-    
+       
+        LOG.info("******* Api call api ,  : %s Requestid  :%s*******",requestid,email)
+        client =Client(wsdl = eqConnectwsdl)
+        LOG.info("******* Account :%s*****customer : %s**",requestid,email)
+        sessiontoken =  client.service.login(**request_cbs_login_data)
+        if sessiontoken :     
+            LOG.info('Account: %s: , session token : %s  ', requestid, sessiontoken)
+            transactionClient = Client(eqTransactionwsdl)
+            request_data = { 
+                'sessionToken' : sessiontoken,
+                'custMnem' : custMnem,
+                'custLoc' :  empty_none_value,
+                'email1' : email
+                
+            }
+            cusresult = transactionClient.service.addCustomerDetails(**request_data)
+            LOG.info('Account: %s: , Cust details Result Data : : %s  ',requestid, cusresult)
+            #LOG.info('Account: %s: , Request Data : 1.session token : %s  ', custno, sessiontoken)
+            #cusresult = transactionClient.service.customerDetails(**request_data)
+            #LOG.info('Account: %s: , Cust details Result Data : : %s  ', custno, cusresult)
+            print (cusresult)
+            print ('Email Update ok')
+            result = client.service.logout (sessiontoken)
+            LOG.debug('Account: %s: , Logout Result Data : : %s  ', requestid, result)
+            return  cusresult['success']
+            
+            '''if cusresult['success'] == 'true' :
+                print ('ok')
+            else:
+                print ('failed')'''
+    except Exception as e:
+        print (e)
+        LOG.error("Account: %s: Error  %s",requestid, email) 
+        return api_response

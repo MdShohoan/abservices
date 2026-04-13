@@ -1,0 +1,38 @@
+{% extends "layouts/admin_base.html" %} {% block title %} Datatable {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<div class="py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+            <li class="breadcrumb-item"><a href="#"><span class="fas fa-home"></span></a></li>
+
+            <li class="breadcrumb-item active" aria-current="page">User List</li>
+        </ol>
+    </nav>
+</div>
+
+
+<div class="row">
+    <div class="col-12 col-xl-12 mb-1">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        <!--<div class="alert alert-{{category}} alert-dismissable" role="alert">
+            {{ message }}
+        </div>-->
+        <div class="alert alert-{{category}}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+        <!--<div class="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+        </div>-->
+    </div>
+
+</div>
+
+
+
+<!-- Specific Page JS goes HERE  -->
+
+{% include "accounts/adduser.html" ignore missing %} {% endblock content %} {% block javascripts %}{% endblock javascripts %}

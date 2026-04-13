@@ -1,0 +1,295 @@
+{% extends "layouts/admin_formc_base.html" %} {% block title %} FormC List {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}
+
+<!--<link rel="stylesheet" href="/static/css/fancybox.css" />-->
+
+    <style> 
+       
+.container{
+    
+    width: 35%;
+}
+.container h1{
+    text-align: center;
+}
+.mooZoom-big-detail {
+    -moz-box-shadow: 0px 0px 10px #000;
+    -webkit-box-shadow: 0px 0px 10px #000;
+    box-shadow: 0px 0px 10px #000;
+}
+   
+    </style>
+{% endblock stylesheets %} 
+{% block content %}
+<div class="py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+            <li class="breadcrumb-item"><a href="/dashboard/"><span class="fas fa-home"></span></a></li>
+            <li class="breadcrumb-item"><a href="/dashboard/formclist">Formc</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Pending Requests</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-12 mb-12">
+        <div class="row">
+            <div class="col-12 col-xl-12 mb-1">
+                {% for category, message in get_flashed_messages(with_categories=true) %}
+                <!--<div class="alert alert-{{category}} alert-dismissable" role="alert">
+                    {{ message }}
+                </div>-->
+                <div class="alert alert-{{category}}" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                <!--<div class="alert alert-primary" role="alert">
+                    A simple primary alert—check it out!
+                </div>-->
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 mb-12">
+                <div class="card border-light shadow-sm">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="h5"> Pending List</h2>
+                            </div>
+                            <div class="col text-right">
+                                <!--<a href="/dashboard/new" class="btn btn-sm btn-secondary">Create New Reequest</a>-->
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table align-items-center table-flush">
+                        <thead>
+                            <tr>
+                                <th>Remitter Name</th>
+                                <th>Remittance Amount </th>
+                                <th>Applicant Name</th>
+                                <th>Remit Bank  Name</th>
+                                <!--<th>Mobile</th>-->
+                                <!--<th>Tin Return File</th>-->
+                                <th data-type="date" data-format="YYYY/MM/DD">Submission Date</th>
+                                <!--<th>Requested By</th>-->
+                               
+
+                              
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            {% for result in formc_list %}
+                            <tr>
+                                <th scope="row">{{ result.remitter_name}}</th>
+                                <td>{{result.remittance_amount}}</td>
+                                <td>{{result.applicant_name}}</td>
+                                <td>{{result.remitted_bank_name}}</td>
+                              
+                                <!--<td>{{result.mobile}}</td>-->
+                               
+                                <td>
+                                    
+                                    <p class="created_at"> {{ result.application_date.strftime('%Y-%m-%d')}}  </p>
+                                  
+                                </td>
+
+                                <td>
+                                    <!--<button class="btn btn-info" id="infoAlert">Info alert</button>-->
+                                    {% if current_user.has_roles('Admin') %}
+                                        <a class="action btn btn-sm btn-info " id="link2" href="/dashboard/viewformc/{{result.id}}">View</a>
+                                    {% elif current_user.has_roles('Checker') %}
+                                    <a class="action btn btn-sm btn-info " id="link2" href="/dashboard/viewformc/{{result.id}}">View</a>
+                                    {% endif %}
+                                    
+                                </td>
+
+
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript" src="/static/js/datatables.js"></script>
+<!-- Custom Code -->
+<script>
+    const table = new simpleDatatables.DataTable("table")
+
+
+ 
+
+</script>
+
+  
+  <!-- Modal -->
+  <div class="modal hide fade in" id="simple-modal" tabindex="-1" role="dialog" aria-labelledby="simple-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="simple-modalLabel">Tax Return Copy for TIN : <span id="tin"></span> </h5>
+          <button id="clsbtn1" type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          
+        </div>
+        <div class="modal-body">
+            <div class="zoom">
+                <a href="#" >
+                    <img class="imgZoom" id="image" src=""  ref=""/>
+                </a>
+                <!--<img class="imgZoom" id="image" alt="" src="https://it-inzhener.com/img/articles/js/2/zoom_300_400.png" ref="https://it-inzhener.com/img/articles/js/2/zoom_900_1600.png"/>-->
+                <!--<img class="imgZoom" alt="" src="https://it-inzhener.com/img/articles/js/2/zoom_300_400.png" ref="https://it-inzhener.com/img/articles/js/2/zoom_900_1600.png"/>-->
+                
+            </div>
+            <span class="contain"></span> 
+                
+            
+            
+        </div>
+        <div class="modal-footer">
+          <button id="clsbtn2" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button id="user_check_submit" type="button" data-download=""   class="btn btn-primary">Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!--<script src="/path/to/cdn/jquery.min.js"></script>-->
+
+  
+  
+  
+  <script>
+   
+
+
+
+
+$(document).on("click","#link",function(e){
+    e.preventDefault();
+    r = confirm('are you sure you want to approve?');
+    if (r == true){
+        var href = $(this).attr('href');
+        //alert (href);
+        location.href = href;
+    }
+});
+
+    $(document ).ready(function() {
+
+         console.log( "ready!" );
+         //alert ('this...');
+         const img = document.getElementById("image");
+         const simpleModal = document.getElementById("simple-modal");
+         $(document).on('show.bs.modal','#simple-modal',function (e){
+            console.log (e);
+            bigImage = e.relatedTarget.getAttribute('data-bigimage');
+            tin_no = e.relatedTarget.getAttribute('data-tin');
+            //alert (tin_no);
+            //console.log ("tin_no" + tin_no);
+            img.src = bigImage;
+            
+            $('#tin').html(tin_no);
+            //$(this).attr('data-download') = bigImage;
+            $('#user_check_submit').data('download', bigImage);
+            //$('#user_check_submit').data('tin', bigImage);
+            //$('#image').data('zoom-image', bigImage);
+            $("img").attr("ref",bigImage);
+
+
+            //$('.imgZoom').mooZoom(options);
+
+            
+
+         });
+
+         $('#simple-modal').on('hidden.bs.modal',function (e){
+            console.log ('closing...')
+            console.log (e);
+         });
+         /*simpleModal.addEventListener("show.bs.modal", (e) => {
+		    const bigImage = e.relatedTarget.getAttribute('data-bigimage')
+		    img.src = bigImage;
+        });*/
+        $('#clsbtn1').click(function (){
+            $("#simple-modal").modal('hide');
+        });
+        $('#clsbtn2').click(function (){
+            $("#simple-modal").modal('hide');
+        });
+
+        // zmbtn
+
+        $('#info_link').click(function(e){
+            
+            e.preventDefault();
+          
+        });
+
+        $('#zmbtn').click(function (){
+            $("#image").animate({width: "300%"}, 500);
+          
+
+        });
+
+        $('#user_check_submit').click(function (){
+            
+            //alert (bigImage);
+            downloadImage(bigImage);
+            $("#simple-modal").modal('hide');
+          
+        });
+
+        
+       
+        
+    
+    
+    
+    });
+
+
+  </script>
+
+<script> 
+    jQuery(document).ready(function() {
+        jQuery('.imgZoom').mooZoom(options);
+    });
+
+
+    $(document).ready(function() { 
+       // $('.imgZoom').mooZoom(options);
+
+        /*$('#image').toggle(
+            
+              function() { $(this).animate({width: "100%"}, 500)},
+               function() { $(this).animate({width: "50px"}, 500); }
+        );*/
+        
+    }); 
+</script> 
+
+<script>
+   
+  </script>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+
+{% endblock javascripts %}
+

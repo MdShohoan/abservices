@@ -1,0 +1,240 @@
+<div class="row">
+    <div class="col-12 col-xl-12 mb-12">
+        <div class="row">
+            <div class="col-12 mb-12">
+                <div class="card border-light shadow-sm">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="h5">Add User</h2>
+                            </div>
+                            <div class="col text-right">
+                                <a href="/adduser" class="btn btn-sm btn-secondary">Create New User</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container sCantainerStyle">
+                        <div class="row">
+                            <br />
+                            <p>
+                                {% for category, message in get_flashed_messages(with_categories=true) %}
+
+                                <button class="btn btn-{{category}}" id="infoAlert">{{ message }}</button> {% endfor %}
+                            </p>
+
+                            <p>
+                                {% if msg %} {{ msg | safe }} {% else %} Please Fill UP Form {% endif %}
+                            </p>
+                        </div>
+
+
+                        <form id="adduserform" method="post" action="">
+
+                            <table class="sTableStyle">
+                                <tr>
+                                    <td><label class="sLabelStyle">User ID :</label></td>
+                                    <td><input type="text" name="Username" id="sUserId" class="sInputStyle" placeholder="User name..." value="{% if user and user is defined %} {{user.Username}}  {% endif %}" required>
+                                        <span class="input-group-btn">
+                                            <!--<button class="btn btn-primary" type="button" id="userNameSearchBtn">
+                                                <span class="glyphicon glyphicon-search"></span>
+                                        </button>-->
+                                        <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#exampleModal">Verify</button>
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label class="sLabelStyle"> Display Name:</label></td>
+                                    <td><input type="text" id="sName" name="Displayname" class="sInputStyle" placeholder="Name...." value="{% if user and user is defined %} {{user.Displayname}}  {% endif %}" required disabled></td>
+                                </tr>
+
+                                <tr>
+                                    <td><label class="sLabelStyle">Branch:</label></td>
+                                    <td><input type="text" name="sBranch" id="sBranch" class="sInputStyle" placeholder="Branch" value="{% if user and user is defined %} {{user.Branch}}  {% endif %}" required disabled></td>
+                                </tr>
+                                <tr>
+                                    <td><label class="sLabelStyle">Mobile:</label></td>
+                                    <td><input type="text" name="sMobile" id="sMobile" class="sInputStyle" placeholder="Mobile...." value="{% if user and user is defined %} {{user.Phone}}  {% endif %}" required disabled/></td>
+                                </tr>
+                                <tr>
+                                    <td><label class="sLabelStyle">Email:</label></td>
+                                    <td><input type="text" name="sEmail" id="sEmail" class="sInputStyle" placeholder="Email" value="{% if user and user is defined %} {{user.email}}  {% endif %}" disabled /> </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label> Select Application : </label></td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="tin" name="user_role" value="tin"  {% if "tin" in user.user_role %}  checked {% endif %}>
+                                            <label class="form-check-label">Tax Return</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="formc" name="user_role" value="formc"  {% if "formc" in user.user_role %}  checked {% endif %} >
+                                            <label class="form-check-label">Form-C</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="email" name="user_role" value="email"  {% if "email" in user.user_role %}  checked {% endif %}>
+                                            <label class="form-check-label">Email</label>
+                                        </div>
+
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><label> Select Role : </label></td>
+                                    <td>
+                                        <div class="form-group">
+                                            <br>
+                                            <select name="role" id="role" class="form-control form-select">
+                                                        
+                                                        {% for role in roles %}
+                                                            <option value="{{role.id}}" {% if role.id == cur_role_id and cur_role_id is defined  %} selected="selected"{% endif %}> {{ role.name }} </option>
+                                                        {% endfor %}
+                                                    </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+
+                                    </td>
+                                    <td> <br>
+                                        <button type="submit" id="adduser" class="btn btn-danger" onclick="validate()">Submit</button>
+                                    </td>
+                                    <input
+                                    type="hidden"
+                                    id="csrf_token"
+                                    name="csrf_token"
+                                    value="{{csrf_token()}}"
+                                  />
+                                </tr>
+
+                            </table>
+                        </form>
+
+                    </div>
+                </div>
+
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1 " role="dialog " aria-labelledby="exampleModalLabel " aria-hidden="true ">
+    <div class="modal-dialog " role="document ">
+        <div class="modal-content ">
+            <div class="modal-header ">
+                <h5 class="modal-title " id="exampleModalLabel "> Authenticate User </h5>
+                <button type="button " class="close " data-dismiss="modal" data-dismiss="modal" aria-label="Close ">
+            <span aria-hidden="true ">&times;</span>
+        </button>
+            </div>
+            <div class="modal-body ">
+                <form class="userForm" id="user_check_form" method="post" action="/checkuser">
+                    <div class="form-row ">
+                        <label for="inputState ">Username </label>
+
+                        <input type="text" name="username" id="sUserName" class="sInputStyle" placeholder="Domain Name" required>
+
+                    </div>
+                    <div class=" form-row ">
+                        <label for=" ">Password</label>
+                        <input type="password" name="password" id="sPassword" class="sInputStyle" required>
+                        <!-- Button trigger modal -->
+                        <input type="hidden" id="domainid" name="domainid" value="" />
+
+                    </div>
+            </div>
+            <div class="modal-footer ">
+                <button type="button " class="btn btn-danger btn-sm " data-dismiss="modal" data-dismiss="modal">Close</button>
+                <button type="button " class="btn btn-info btn-sm " id="user_check_submit" data-dismiss="modal" data-dismiss="modal">Submit</button>
+            </div>
+            <input
+            type="hidden"
+            id="csrf_token"
+            name="csrf_token"
+            value="{{csrf_token()}}"
+          />
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+
+        $(document).on('show.bs.modal', '.modal', function() {
+            // run your validation... ( or shown.bs.modal )
+            //alert('test');
+            //alert($('#sUserId').val());
+            $('#domainid').val($('#sUserId').val());
+        });
+
+        $(document).on("click", "#adduser", function(e) {
+            e.preventDefault();
+
+            $('#sName').attr("disabled", false);
+            $('#sBranch').attr("disabled", false);
+            $('#sMobile').attr("disabled", false);
+            $('#sEmail').attr("disabled", false);
+            $("#adduserform").submit();
+
+            //$('#type_product_service').attr("disabled", false);
+
+        });
+
+
+        //alert('start');
+        //$('body').on('click', '#user_check_form', function() {
+        $('#user_check_submit').on('click', function(e) {
+            e.preventDefault();
+            //alert('user check');
+            $.ajax({
+                type: "POST",
+                url: "/checkuser",
+                data: $('form').serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    //alert(response);
+
+                    $('#sName').val(response.result.serachusername);
+                    $('#sBranch').val(response.result.office);
+                    $('#sEmail').val(response.result.email);
+                    $('#sMobile').val(response.result.mobile);
+
+                    console.log(response);
+                    console.log('email');
+                    console.log(response.result.email);
+                    //$('#exampleModal').modal('hide');
+                    //hideLoading();
+                    //$('#exampleModal').modal().hide();
+                    //$('#exampleModal').hide('hide');
+                    //window.location.href = "/allusers";
+                    //$('#exampleModal').modal('toggle');
+                   // $('#exampleModal').each(function(){$(this).modal('hide');});
+                    $('#exampleModal').modal('hide');
+                    $('body').removeClass('modal-open');
+                    $('.modal-backdrop').remove();
+                },
+                error: function(error) {
+                    //alert('Error');
+                    //alert(error);
+                    alert('Domain Name not found');
+                }
+            });
+            return false;
+        });
+
+    });
+    function hideLoading() {
+        $('#exampleModal').on('shown.bs.modal', function (e) {
+            $("#exampleModal").modal('hide');
+        });
+}
+</script>

@@ -1,0 +1,71 @@
+<html>
+
+<head>
+    <link
+      rel="stylesheet"
+      href="/static/bootstrap-4.0/dist/css/bootstrap.min.css"
+    />
+    
+    <style>
+        @page {
+            @bottom-right {
+                content: counter(page) " of " counter(pages);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="page-break-before: always;">
+        <div class="row">
+            <div class="col-12">
+                <strong>Account No #:</strong>
+                <span>{{customer.external_account}}</span>
+            </div>
+        </div>
+        <h4>Email Update Information </h4>
+        <table class="table table-bordered table-condensed">
+            <tbody>
+
+                <tr>
+                    <td>
+                        <h6>
+                            <strong>Applicant name</strong>
+                        </h6>
+                        <span>{{customer.customer_name}}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6>
+                            <strong>Email address</strong>
+                        </h6>
+                        <span>{{customer.email}}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6>
+                            <strong>created </strong>
+                        </h6>
+                        <span>
+                            {{ customer.created_at.strftime('%Y-%m-%d %H:%M:%S')}}
+                            </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h6>
+                            <strong>Customer Basic</strong>
+                        </h6>
+                        <span> {{ customer.account_no}}</span>
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+        <hr/>
+    </div>
+</body>
+
+</html>

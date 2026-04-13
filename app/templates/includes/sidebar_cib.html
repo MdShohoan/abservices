@@ -1,0 +1,198 @@
+<style>
+    .bg-dark {
+        background-color: #FA5252 !important;
+        font-family:Arial, Helvetica, sans-serif;
+    }
+    
+    </style>
+    <nav id="sidebarMenu" class="sidebar d-md-block bg-dark text-white collapse" data-simplebar>
+        <div class="sidebar-inner px-4 pt-3">
+            <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar lg-avatar me-4">
+                        <img src="/static/assets/img/abbanklogo.jpg" class="card-img-top rounded-circle border-white" alt="Bonnie Green">
+                    </div>
+                    <!--<div class="d-block">
+                        <h2 class="h6">
+                            {{ current_user.Username }}
+                        </h2>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary text-dark btn-xs"><span
+                    class="me-2"><span class="fas fa-sign-out-alt"></span></span>Sign Out</a>
+                    </div>-->
+                </div>
+                <div class="collapse-close d-md-none">
+                    <a href="#sidebarMenu" class="fas fa-times" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle navigation"></a>
+                </div>
+            </div>
+            <ul class="nav flex-column pt-3 pt-md-0">
+                <!--<li class="nav-item">
+                    <a href="/" class="nav-link d-flex align-items-center">
+                        <span class="sidebar-icon">
+                  <img src="/static/assets/img/abbanklogo.jpg"  alt="AB Bank Logo">
+               
+                    </a>
+                </li>-->
+                
+                <li class="nav-item">
+                    <a href="/cib/" class="nav-link">
+                        <span class="sidebar-icon"><span class="fas fa-chart-pie"></span></span>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-inst">
+                        <span>
+                            <span class="sidebar-icon"><span class="far fa-file-alt"></span></span>
+                            <span class="sidebar-text">Installment</span>
+                        </span>
+                        <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
+                    </span>
+                    <div class="multi-level collapse " role="list" id="submenu-inst" aria-expanded="false">
+                        <ul class="flex-column nav">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/instbranch">
+                                        <span class="sidebar-text">BranchWise  </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/instpersonal/">
+                                        <span class="sidebar-text">Personal  </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/instcompany/">
+                                        <span class="sidebar-text">Institution  </span>
+                                </a>
+                            </li>
+                            <!-- for test data -->
+                            <!--<li class="nav-item">
+                                <a class="nav-link" href="/cib/testdata/">
+                                        <span class="sidebar-text">Test Data  </span>
+                                </a>
+                            </li>-->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/instclassified/">
+                                        <span class="sidebar-text">Installment Classified  </span>
+                                </a>
+                            </li>
+                            <!-- end test data -->
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-noninst">
+                        <span>
+                            <span class="sidebar-icon"><span class="far fa-file-alt"></span></span>
+                            <span class="sidebar-text">NonInstallment</span>
+                        </span>
+                        <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
+                    </span>
+                    <div class="multi-level collapse " role="list" id="submenu-noninst" aria-expanded="false">
+                        <ul class="flex-column nav">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/noninstbranch">
+                                        <span class="sidebar-text">BranchWise </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/noninstpersonal">
+                                        <span class="sidebar-text">Personal </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/noninstcompany/">
+                                        <span class="sidebar-text">Institution </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/noninstclassified/">
+                                        <span class="sidebar-text">NonInstallment Classified  </span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-card">
+                        <span>
+                            <span class="sidebar-icon"><span class="far fa-file-alt"></span></span>
+                            <span class="sidebar-text">Card Contract</span>
+                        </span>
+                        <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
+                    </span>
+                    <div class="multi-level collapse " role="list" id="submenu-card" aria-expanded="false">
+                        <ul class="flex-column nav">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/card">
+                                        <span class="sidebar-text">Personal </span>
+                                </a>
+                            </li>
+                            
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-missing">
+                        <span>
+                            <span class="sidebar-icon"><span class="far fa-file-alt"></span></span>
+                            <span class="sidebar-text">Missing Data</span>
+                        </span>
+                        <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
+                    </span>
+                    <div class="multi-level collapse " role="list" id="submenu-missing" aria-expanded="false">
+                        <ul class="flex-column nav">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/wrongtin">
+                                        <span class="sidebar-text"> Tin Number </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/wrongnid">
+                                        <span class="sidebar-text">National ID </span>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/missingdefaulter">
+                                        <span class="sidebar-text">Defaulter Status </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cib/defaulterlist">
+                                        <span class="sidebar-text">All Defaulter </span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+                <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
+            <li class="nav-item">
+                <a href="{{url_for('auth.logout')}}"  class="nav-link d-flex align-items-center">
+                    <span class="sidebar-icon"><span class="fas fa-info-circle"></span></span>
+                    <span class="sidebar-text">Logout</span>
+                </a>
+            </li>
+
+
+                
+                
+                <!--<li class="nav-item">
+                    <a href="https://appseed.us/" target="_blank" class="nav-link d-flex align-items-center">
+                        <span class="sidebar-icon"><span class="fas fa-envelope"></span></span>
+                        <span class="sidebar-text">Support</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a target="_blank" href="https://appseed.us/admin-dashboards/flask-dashboard-volt-pro" class="btn btn-secondary d-flex align-items-center justify-content-center btn-upgrade-pro">
+                        <span class="sidebar-icon"><span class="fas fa-rocket me-2"></span></span>
+                        <span>Upgrade to Pro</span>
+                    </a>
+                </li>-->
+            </ul>
+        </div>
+    </nav>

@@ -1,0 +1,108 @@
+{% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+<style>
+    .active {
+        background: #fcfcfc !important;
+    }
+    .nav>li>a {
+       font-size: large; 
+
+    }
+</style>
+
+<div class="container">
+   
+    
+
+
+   
+    <div class="row ">
+        <p id="result"></p>
+         <h5>Your statement is ready.  <strong> Please click download button below</strong> </h5>
+        <!--<h5> Your statement download will start in 5 seconds. If not , <strong>please check in your download folder </strong>   or click below link to download again. </h5>-->
+    </div>
+   
+       
+    <table class="table table-responsive table-borderless">
+        <tbody>
+          <tr>
+            <td scope="col"> 
+                <div>
+                    <form class="" action="{{download_link}}" method="post">
+                        <input type="hidden" id="trackingcode" name="trackingcode" value="{{trackingcode}}"/>
+                        <input type="hidden" id="csrf_token" name="csrf_token" value="{{csrf_token()}}"/>
+                        <button  class="btn btn-danger" type="submit" >Download</button>
+                    </form>
+                </div>        
+            
+            </td>
+            <td scope="col">
+                <div><a class="btn btn-primary"  href="/"> Home </a> </div>  </td>
+        </tr>
+        </tbody>
+        
+      </table>    
+
+
+
+    <hr>
+<div class="instruction-container">
+    <h5 class="instruction-title"><b>Instructions</b></h5>
+    <div class="instruction-item-container">
+        <p class="instruction-item">1. Please enter your 13 digits account number.</p>
+        <p class="instruction-item">2. An OTP will be sent to your mobile number, which is tagged with the account. </p>
+        <p class="instruction-item">3. Verify the request using that OTP. </p>
+        <p class="instruction-item">4. Please click <strong>Download </strong> Button  to download statement.  </p>
+        <p class="instruction-item">5. Statement is password protected. Please use the <strong>first 6 digits of your account number </strong> to open your statement.
+        </p>
+        <p class="instruction-item">* Note - Statement period is from <strong>July 2022 to Dec 2022 </strong>    </p>
+    </div>
+
+</div>
+
+</div>
+
+<script type="text/javascript">
+    // A $( document ).ready() block.
+    $( document ).ready(function() {
+        console.log( "ready!" );
+        //redirect();
+        //alert ('test');
+        /*setTimeout(function(){
+            //YOUR CODE
+            document.location.href = "{{download_link}}";
+        },5000);*/
+
+        /*setTimeout(function(){
+            var url = "/";
+            $(location).attr('href',url);
+        },5000); */
+
+
+        
+    });
+
+    function redirect () {
+       var interval = setInterval(myURL, 3000);
+       var result = document.getElementById("result");
+       result.innerHTML = "<b> Download will start after 3 seconds .";
+    }
+
+    function myURL() {
+       alert ('start download')
+        document.location.href = "{{download_link}}";
+        clearInterval(interval);
+
+    }
+ </script>
+
+{% endblock content %}
+
+
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+

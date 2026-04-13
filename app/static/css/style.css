@@ -571,3 +571,24 @@ select {
     width: 380px;
   }
 }
+
+/* Homecard CSS */
+
+.homeCard {
+  background: #fff !important;
+  margin: 0 auto; /* Added */
+  float: none; /* Added */
+  margin-bottom: 10px; /* Added */
+  transition: 0.5s ease-in-out;
+  color: #c71f37;
+}
+
+.homeCard:hover {
+  color: white !important;
+  background: #c71f37 !important;
+}
+
+.homeCard:hover h4 {
+  color: white !important;
+}
+

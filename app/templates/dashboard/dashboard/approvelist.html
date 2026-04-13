@@ -1,0 +1,177 @@
+{% extends "layouts/admin_base.html" %} {% block title %} Tax Return List {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}
+    <style> 
+        .img-fluid {
+            width: 100%;
+            height: auto;
+}
+   
+    </style>
+{% endblock stylesheets %} 
+{% block content %}
+<div class="py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+            <li class="breadcrumb-item"><a href="#"><span class="fas fa-home"></span></a></li>
+            <li class="breadcrumb-item"><a href="#">Tax Return</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Approve Requests</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-12 col-xl-12 mb-12">
+        <div class="row">
+            <div class="col-12 mb-12">
+                <div class="card border-light shadow-sm">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h2 class="h5"> Approved List</h2>
+                            </div>
+                            <div class="col text-right">
+                                <!--<a href="/dashboard/new" class="btn btn-sm btn-secondary">Create New Reequest</a>-->
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table align-items-center table-flush">
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>Branch </th>
+                                <th>Tin Number</th>
+                                <th>Financial Year</th>
+                                <!--<th>Mobile</th>-->
+                                <th>Tin Return File</th>
+                                <th data-type="date" data-format="YYYY/MM/DD">Submission Date</th>
+                                <!--<th>Requested By</th>-->
+                               
+
+                              
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            {% for result in tin_list %}
+                            <tr>
+                                <th scope="row">{{ result.account_no}}</th>
+                                <td>{{result.branch_code}}</td>
+                                <td>{{result.tin_no}}</td>
+                                <td>{{result.financial_year}}</td>
+                              
+                                <!--<td>{{result.mobile}}</td>-->
+                                <td>
+                                    <!-- Trigger/Open The Modal -->
+                                    <!-- Button trigger modal -->
+                                    <!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#simple-modal">
+                                        Launch demo modal
+                                    </button>-->
+
+                                    <img style="width:100%;max-width:70px" class="img-fluid" src="{{result.tin_return_file}}" data-bs-toggle="modal" data-bs-target="#simple-modal" data-bigimage="{{result.tin_return_file}}">
+
+                                  
+
+                                </td>
+                                <td>
+                                    
+                                    <p class="created_at"> {{ result.created_at.strftime('%Y-%m-%d')}}  </p>
+                                  
+                                </td>
+
+                                <td>
+                                 
+                                </td>
+
+
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript" src="/static/js/datatables.js"></script>
+<!-- Custom Code -->
+<script>
+    const table = new simpleDatatables.DataTable("table")
+
+
+ 
+
+</script>
+
+  
+  <!-- Modal -->
+  <div class="modal hide fade in" id="simple-modal" tabindex="-1" role="dialog" aria-labelledby="simple-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="simple-modalLabel">Tin Return Image</h5>
+          <button id="clsbtn1" type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <img class="img-fluid" id="image" src="">
+            
+        </div>
+        <div class="modal-footer">
+          <button id="clsbtn2" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button id="savimg" type="button" class="btn btn-primary">Save </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    $(document ).ready(function() {
+         console.log( "ready!" );
+         //alert ('this...');
+         const img = document.getElementById("image");
+         const simpleModal = document.getElementById("simple-modal");
+         $(document).on('show.bs.modal','#simple-modal',function (e){
+            console.log (e);
+            const bigImage = e.relatedTarget.getAttribute('data-bigimage');
+            img.src = bigImage;
+
+         });
+
+         $('#simple-modal').on('hidden.bs.modal',function (e){
+            console.log ('closing...')
+            console.log (e);
+         });
+         /*simpleModal.addEventListener("show.bs.modal", (e) => {
+		    const bigImage = e.relatedTarget.getAttribute('data-bigimage')
+		    img.src = bigImage;
+        });*/
+        $('#clsbtn1').click(function (){
+            $("#simple-modal").modal('hide');
+        });
+        $('#clsbtn2').click(function (){
+            $("#simple-modal").modal('hide');
+        });
+
+    });
+
+    //$(document).off('focusin.modal');
+
+  </script>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+
+{% endblock javascripts %}
+

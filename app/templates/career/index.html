@@ -1,0 +1,209 @@
+{% extends "layouts/career_base.html" %}
+{% block title %} Please Upload Your Resume -AB Bank Limited {% endblock title%}
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="container-fluid bg-light ">
+    <div class="row bg-light">
+      <div class="offset-lg-1 col-lg-10 col-10">
+        <div class="mb-12">
+          <h3 class="mb-3  fw-bold">Join Us To Lead The Change</h1>
+          <!-- lead -->
+              <p class="mb-0 lead pe-lg-12 ">
+              Build your profile by uploading your CV. 
+              </p>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div class="b-example-divider"></div>
+  
+  <div class="container py-3">
+    <div class="row">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+              <div class="{{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    </div>  
+   
+  </div>
+  <div class="b-example-divider"></div>
+        <!-- content -->
+      <div class="container  py-3">
+        <div class="row">
+        <form class="was-validated" action="/career/" method="POST" enctype="multipart/form-data">
+          <div class="card card-bordered shadow-none mb-3  ">
+            <!-- Card body -->
+            <div class="card-body p-6">
+                <div class="mb-4">
+                  <h4 class="mb-0">Basic Information</h2>
+                  <span>Add your personal details in the form.</span>
+                </div>
+                <div class="b-example-divider"></div>
+                <!-- row -->
+                <div class="row gx-3">
+                  <div class="mb-4 col-12 col-md-12">
+                      <!-- label -->
+                      <label class="form-label" for="fname">Full Name<span class="text-danger">*</span></label>
+                      <!-- input -->
+                      <input type="text" id="fname" name="fullname" class="form-control" placeholder="Full Name" required>
+                      <div class="valid-feedback">Valid.</div>
+                      <div class="invalid-feedback">Please fill out this field.</div>
+                  </div>
+                  
+                  
+                  <div class="mb-4 col-12 col-md-12">
+                    <!-- label -->
+                    <label class="form-label" for="email">Email<span class="text-danger">*</span></label>
+                    <!-- input -->
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Tell us your Email ID" required>
+                    <!-- label -->
+                    <span class="fs-6">We'll send you relevant jobs in your mail</span>
+                  </div>
+                  <div class="mb-4 col-12 col-md-12">
+                      <!-- label -->
+                      <label class="form-label" for="phone">Phone<span class="text-danger">*</span></label>
+                      <!-- input group -->
+                      <div class="input-group mb-1">
+                        <span class="input-group-text" id="phone">+88</span>
+                        <!-- input -->
+                        <input type="text" name="phone" class="form-control" placeholder="Mobile Number" aria-label="Mobile Number" aria-describedby="phone" required>
+                      </div>
+                      <!-- text -->
+                      <span class="fs-6">Recruiters will call you on this number</span>
+                   </div>
+                   <div class="mb-4 col-12 col-md-12">
+                    <!-- label -->
+                    <label class="form-label" for="lname">Job Experience<span class="text-danger">*</span></label>
+                    <!-- input -->
+                    <input type="text" id="experience" name="experience" class="form-control"   pattern="[0-9]+" placeholder="Job Experience in year" required>
+                    <!-- label -->
+                    <span class="fs-6">Job Experience in Year. Fresher can set 0. </span>
+                    <div class="valid-feedback">Looks Good.</div>
+                    <div class="invalid-feedback">Please fill out this field with Number.</div>
+                </div>
+  
+                    <div class="mb-4 col-12 col-md-12">
+                      <!-- text -->
+  
+                      <div class="fs-5 text-dark mb-2">Gender</div>
+                          <!-- radio -->
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="male" value="male" >
+                            <label class="form-check-label" for="male">Male</label>
+                          </div>
+                          <!-- radio -->
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="female" value="female" >
+                            <label class="form-check-label" for="female">Female</label>
+                          </div>
+                    </div>
+  
+                    
+  
+                  <div class="mb-4 col-12 col-md-12">
+                      <!-- label -->
+                      <label class="form-label" for="interests">Area of interest<span class="text-danger">*</span></label>
+                      <!-- input group -->
+                      <div class="input-group mb-1">
+                        <div class="form-check">
+
+                          <!--<input class="form-check-input" type="checkbox" id="check1" name="option1" value="something" checked>
+                          <label class="form-check-label">Option 1</label>-->
+                          <!--<input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                          <label class="form-check-label" for="flexCheckDefault">
+                            Default checkbox
+                          </label>-->
+                          <p><input class="form-check-input" type="checkbox" id="check1" name="interests" value="sales" >
+                        <label class="form-check-label">Sales</label></p>
+
+                          
+                          
+                          <p><input  class="form-check-input" type ="checkbox" name="interests" value = "credit"><label class="form-check-label fs-6" >Credit</label></p>
+                          <p><input class="form-check-input" type ="checkbox" name="interests" value = "foreign_exchange"> <label class="form-check-label fs-6"> Foreign Exchange</label></p>
+                          <p><input class="form-check-input" type ="checkbox" name="interests" value = "it"><label class="form-check-label fs-6">IT</label></p>
+
+
+                        </div>
+                        <!--<span class="input-group-text" id="phone">+88</span>-->
+                        <!-- input -->
+                        <!--<input type="text" name="phone" class="form-control" placeholder="Mobile Number" aria-label="Mobile Number" aria-describedby="phone">-->
+                        <!--<textarea class="form-control" name="interests" id="interests" rows="4" required></textarea>-->
+                      </div>
+                        <!-- text -->
+                        <span class="fs-6">Please write your interests </span>
+                    </div>
+                    <div class="mb-4 col-12 col-md-12">
+                      <!-- label -->
+                      <label class="form-label" for="objective">Objective<span class="text-danger">*</span></label>
+                      <!-- input group -->
+                      <div class="input-group mb-1">
+                        <!--<span class="input-group-text" id="phone">+88</span>-->
+                        <!-- input -->
+                        <!--<input type="text" name="phone" class="form-control" placeholder="Mobile Number" aria-label="Mobile Number" aria-describedby="phone">-->
+                        <textarea class="form-control" name="objective" id="objective" rows="4" required></textarea>
+                      </div>
+                      <!-- text -->
+                      <span class="fs-6">Please write your Career Objective </span>
+                    </div>
+                    <div class="mb-4 col-12 col-md-12">
+                      
+                      <label class="form-label" for="resume">Resume</label>
+                      <div class="input-group mb-1">
+                        <input type="file" name="file" class="form-control" id="resume" required>
+                        <label class="input-group-text" for="resume">Upload</label>
+                      </div>
+                      <!-- text -->
+                      <span class="fs-6"> PDF | Max: 2 MB. Recruiters give first preference
+                        to
+                        candidates who have a
+                        resume</span>
+                    </div>
+                      <!--<div class="mb-4 col-12 col-md-12">
+                        
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="chkcbox" value="" id="formId" required>
+                          <label class="form-check-label fs-6" for="formId">
+                            I have read and agree to the <a href="#">terms of service</a>
+                          </label>
+                        </div>
+                      </div>-->
+  
+                      <div class="mb-4 col-12 col-md-12">
+                        <!-- Button -->
+                        <!--<button class="btn btn-primary" onclick="stepperForm.next()">
+                          Nextclass="btn btn-lg btn-primary btn-block"
+                        </button>-->
+                            <!--      <button type="submit" class="btn btn-lg btn-primary btn-block">Submit</button>
+                              </div>
+                          </div>-->
+                          <!--<div class="checkbox">
+                            <label class="small">
+                                <input name="terms" type="checkbox">I have read and agree to the <a href="#">terms of service</a>
+                            </label>
+                        </div>-->
+                        <!--<input class="btn btn-lg btn-primary btn-block" value="Sign Me Up" type="submit">-->
+                        <!---------------------------------------------------------------------------->
+            <input
+            type="hidden"
+            id="csrf_token"
+            name="csrf_token"
+            value="{{csrf_token()}}"
+          />
+                        <button type="submit" class="btn btn-lg btn-primary btn-block">Submit</button>
+                      </div>
+            </div> 
+             <!-- Card body -->
+          </div>
+             <!-- Card -->   
+      </form>
+    </div> <!--row-->
+    </div>
+    <!-- content -->
+ 
+  
+
+{% endblock content %}

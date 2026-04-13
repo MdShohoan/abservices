@@ -19,12 +19,16 @@ function handlecsrferror(){
 
 function resendOtp(csrf_token)
 {
+	alert ('test');
+	console.log ('test');
 	var number = $("#mobile").val();
 	var input = {
 		"mobile_number" : number,
 		"csrf_token" :csrf_token,
 		"action" : "send_otp"
 	};
+
+	console.log (input);
 
 	$.ajaxSetup({
         beforeSend: function(xhr, settings) {
@@ -65,7 +69,7 @@ function resendOtp(csrf_token)
 }
 
 
-function verifyOTP() {
+/*function verifyOTP() {
 	$("#err-div").html("").hide();
 	$(".success").html("").hide();
 	let otp 			= $("#mobileOtp").val();
@@ -109,7 +113,8 @@ function verifyOTP() {
 		if (otp != null) {
 		console.log ('ajax');
 		$("#spinning-div").show();
-		ajax_url =  base_url+'verify/'+otp+'/'+type+'/'
+		ajax_url =  base_url+'/profile/verify/'+otp+'/'+type+'/'
+		//ajax_url =  '/verify/'+otp+'/'+type+'/'
 		console.log ('ajax_url:' + ajax_url)
         $.ajax({
 			//url : base_url+'verify/'+otp+'/'+type+'/',
@@ -138,8 +143,9 @@ function verifyOTP() {
 					//alert (response[1].redirectUrl)
 					$("#spinning-div").hide();
 					console.log ('URL : ' +response[1].redirectUrl )
+					console.log (response);
 					//alert (response[1].redirectUrl);
-					$("#err-div").html(response[2].message).show();
+					//$("#err-div").html(response[1].message).show();
 					window.location.href = response[1].redirectUrl;
 					//$.redirect(response[1].redirectUrl, {"Content-Type": "application/json", "Username":"bkashabbl","Password":"abbl@123"});
 				}
@@ -156,4 +162,4 @@ function verifyOTP() {
 		$(".error").html('You have entered wrong OTP.')
 		$(".error").show();
 	}
-}
+}*/

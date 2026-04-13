@@ -1,0 +1,267 @@
+{% extends "layouts/formc_base.html" %}
+    {% block title %} Please Update Your Form-C -AB Bank PLC {% endblock title%}
+     <!-- Specific CSS goes HERE  -->
+     {% block stylesheets %}{% endblock stylesheets %} 
+    
+
+     </style>
+     {% block content %}
+     <style>
+      .formbold-mb-3.required .formbold-form-label:after {
+        content:"*";
+        color:red;
+      }
+     </style> 
+     <div class="formbold-main-wrapper">
+        <div class="formbold-form-wrapper">
+          <div class="main-header">
+            <div class="container">
+              <div class="row">
+
+                
+
+                <div class="col-lg-12 col-md-6 col-sm-6 col-xs-6">
+                  <!-- flash messages goes here -->
+                 
+                    
+                    
+                  <div class="row" class="flash_message" style="justify-content: center">
+                          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+                          messages %}
+                          <div class="alert-primary">
+                            {% for category, message in messages %}
+                            <p class="{{ category }}"><strong>{{ message }}</strong></p>
+                            {% endfor %}
+                          </div>
+                          {% endif %} {% endwith %}
+                          <br />
+                        </div>
+                  
+                
+              </div>
+                
+                <div class="container-fluid p-5  text-black text-center">
+                  <h1>Please Select Form-C Type </h1>
+                  <p>
+                    DECLARATION FOR REMITTANCE RECEIVED FROM FOREIGN COUNTRY OF AMOUNT
+                    EXCEEDING USD 20,000 OR EQUIVALENT
+                  </p>
+                </div>
+                
+                
+              </div>
+            </div>
+          </div>
+  
+          
+          <form  action="/formc/home/{{trackingcode}}/{{request_type}}" method="POST">
+            <div class="formbold-form-title">
+              <h2>
+               
+                <div id="frmType">
+                  <div class="text-center">
+                    <input type="radio" name="remittance_type" id="frm_type" value="Others" checked  />
+                    <label id="labelstyle">Form-C</label>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="remittance_type" id="frm_type" value="ICT" />
+                    <label id="labelstyle">Form-C (ICT)</label>
+                  </div>
+                </div>
+
+              </h2>
+              <hr />
+              
+            </div>
+            <!------------------REMITTER----------------------------->
+            <!--<div class="row" id="formcid" >
+            <label class="details-title">Remitter Details</label>
+            <hr />
+            <div class="remitter">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Remitter Name </label>
+                <input
+                  
+                  type="text"
+                  class="formbold-form-input"
+                  name="remitter_name"
+                  required
+                />
+              </div>
+  
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Remitter Address </label>
+                <input type="text"  name="remitter_address" class="formbold-form-input" required />
+              </div>
+            </div>-->
+  
+            <!-------------------------------------------------->
+  
+            <!------------------Remittance----------------------------->
+  
+            <div class="formbold-form-title"></div>
+  
+            <label class="details-title">Remittance Details</label>
+            <hr />
+            <div class="remitter">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Remitter Name </label>
+                <input
+                  
+                  type="text"
+                  class="formbold-form-input"
+                  name="remitter_name"
+                  required
+                />
+              </div>
+  
+             
+            </div>
+            <div class="formbold-input-flex">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label "> Remittance Amount </label>
+                <input type="number" name="remittance_amount" class="formbold-form-input" required/>
+              </div>
+              <div>
+                <label class="formbold-form-label">Remittance Currency</label>
+                <select id="currency" name="remittance_currency">
+                  <option value="BDT">BDT</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+  
+            <!--<div class="formbold-mb-3 required">
+              <label class="formbold-form-label"> Remitted Bank Name </label>
+              <input type="text" name="remitted_bank_name" class="formbold-form-input" required />
+            </div>-->
+  
+            <!--<div class="formbold-mb-3 required">
+              <label class="formbold-form-label "> Remitted Bank Address </label>
+              <input type="text" name="remitted_bank_address" class="formbold-form-input" required />
+            </div>
+            <div class="formbold-mb-3 required" id="remittance_reference_ict">
+              <label class="formbold-form-label"> Remittance Reference  (contract/invoice/electronic communication etc.) </label>
+              <input type="text" name="remittance_reference" class="formbold-form-input" required />
+            </div>-->
+            
+            <div class="formbold-mb-3 required" >
+              <label class="details-title">Remittance Purpose</label>
+              <hr />
+              <div id="myRadioGroup">
+                  <div id="ict" class="ictopt">
+                    {% for result in purposes %}
+                      <input id="opt1" type="radio" name="opt" value="{{result.id}}" checked />
+                      <label id="labelstyle">
+                        {{result.name}}
+                      </label>
+                      <br />
+                    {% endfor %}  
+                  <div>
+                    <input type="radio" name="opt" value="0"/>
+                    <label id="labelstyle">
+                      Specify if purpose not available
+                  </label>
+                  <div class="ictPurposeSpecifyClass">
+                      <br />
+                      <input type="text" name="ictPurposeSpecify" id="ictPurposeSpecify" class="formbold-form-input" />
+                  </div>
+                  <br />
+                </div>
+              </div>
+            </div>
+          </div>
+            <div id="others" class="othersopt">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Remittance Purpose </label>
+                <input type="text" name="purposeSpecify" class="formbold-form-input" id="otherPurposeSpecify" />
+              </div>
+              <br />
+            </div>
+  
+            <!-------------------------------------------------->
+  
+            <!------------------Applicant----------------------------->
+  
+            <div class="formbold-form-title"></div>
+  
+            <label class="details-title">Applicant Details</label>
+            <hr />
+            <div class="remitter">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Applicant Name </label>
+                <input
+                 
+                  type="text" name="applicant_name" value="{{applicant_name}}"
+                  class="formbold-form-input" readonly
+                  required
+                />
+              </div>
+            </div>
+            <div class="remitter">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Applicant Address </label>
+                <input type="text" name="applicant_address" class="formbold-form-input" value="{{applicant_address}}" required readonly />
+              </div>
+            </div>
+            <div class="remitter">
+              <div class="formbold-mb-3 required">
+                <label class="formbold-form-label"> Applicant Mobile </label>
+                <input type="text" name="applicant_mobile" value="{{applicant_mobile}}" class="formbold-form-input" required readonly />
+              </div>
+            </div>
+  
+            <div class="formbold-input-flex">
+              <div>
+                <label for="area" class="formbold-form-label">
+                  Application Date (mm/dd/yyyy)
+                </label>
+                <input
+                  type="date" name="application_date"
+                  id="date"
+                  class="formbold-form-input"
+                  required readonly
+                />
+              </div>
+  
+              <div class="formbold-mb-3">
+                <label class="formbold-form-label">Applicant Nationality</label>
+                <select
+                  name="nationality"
+                  id="nationality"
+                  class="formbold-form-input"
+                  required readonly
+                >
+                  <!--<option value="">-- Select one --</option>-->
+                  
+                  <option value="bangladeshi">Bangladeshi</option>
+                
+                </select>
+              </div>
+            </div>
+  
+            <!---------------------------------------------------------------------------->
+            <input
+            type="hidden"
+            id="csrf_token"
+            name="csrf_token"
+            value="{{csrf_token()}}"
+          />
+            <button class="formbold-btn">Submit</button>
+          </div>  
+          </form>
+         
+        </div>
+      </div>
+     
+      <script>
+      
+      </script>
+     
+     {% endblock content %}
+
+      <!-- Specific Page JS goes HERE  -->
+      {% block javascripts %}
+      
+      
+      {% endblock javascripts %}
+    

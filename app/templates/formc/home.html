@@ -1,0 +1,161 @@
+{% extends "layouts/base2.html" %} {% block title %} Please Update Your Form-C -AB Bank PLC {% endblock title
+    %}
+    <!-- Specific CSS goes HERE  -->
+    {% block stylesheets %}
+    
+    {% endblock stylesheets %} 
+    
+    {% block content %}
+    <style>
+      .form-group.required .control-label:after {
+        content:"*";
+        color:red;
+      }
+    </style>
+    
+    <div class="my-3">
+        <div class="row ">
+          <div class="col-12 col-md-8">
+            <div  class="text-left ">
+        
+              <!--<p>Greetings valued customer! Update your <strong>Email Information</strong> </p>-->
+              <p class="h3"> To FillUp Your Form-C </p>
+              <hr class="hr" />
+            </div>
+            
+            <div class="">
+              <div>
+                <form action="/formc/" method="post">
+                  <div class="form-group required row">
+                    <label for="account_number" class="col-md-4 col-form-label control-label"
+                      > <strong> Enter Your Account Number </strong></label
+                    >
+                    <div class="col-md-6 ">
+                      <div class="input-group mb-3">
+                        <input
+                          type="text"
+                          class="form-control rounded-0"
+                          name="accnt_no"
+                          id="inputAccount"
+                          placeholder="Your 13 digits account number"
+                          aria-label="Customer's Account Number"
+                          required
+                          minlength="13"
+                          maxlength="13"
+                          aria-describedby="basic-addon2"
+                        />
+                        <input
+                          type="hidden"
+                          id="csrf_token"
+                          name="csrf_token"
+                          value="{{csrf_token()}}"
+                        />
+                        <div class="input-group-append">
+                          <button class="btn btn-danger rounded-0" type="submit">
+                            Submit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                <hr class="hr" />
+                <a class="" id="btnClick" data-toggle = 'collapse'  href="#instructions" aria-expanded="false" area-controls="instructions"> Click to View Instructions</a>
+    
+                <div class="my-3" id ="instructions" class ="collapse" style="display:none;">
+                  <div class="card bg-light mb-3 rounded-0">
+                    <div class="card-header text-left">Instruction to Fill up Form-C </div>
+                    <div class="card-body">
+                      
+                      <p class="h7"> <strong>Step 1: Verify one-time password (OTP) by Mobile </strong> </p>
+                      <hr class="hr" />
+                      
+                      <small>
+                        <ol>
+                          <li>Please enter your 13 digits account number</li>
+                          <li>OTP will be sent to your mobile number, which is tagged with the account</li>
+                          <li>Verify the request using OTP</li>
+                          
+                        </ol>
+                      </small>
+                      <p class="h7"> <strong> Step 2 :Fill up Form-C </strong> </p>
+                      <hr class="hr" />
+                      <small>
+                        <ol>
+                        <li>Please choose the Form-C type</li>
+                        <li>Fill up the mandatory field  </li>
+                       <li>Submit the Form-C</li>
+                       
+                      </ol>  
+                      </small>
+                      <!--<small class="card-text text-danger">
+                        * Note - Statement period is from
+                        <strong>July 2022 to December 2022</strong>
+                      </small>-->
+                    </div>
+                  </div>
+                </div>
+
+                
+              </div>
+            </div>
+          </div>
+    
+          <div class="col-12 col-md-4">
+            <div class="owl-carousel owl-theme">
+              <div class="item">
+                <img src="/static/images/bengali-01.jpg" alt="" />
+              </div>
+              <!--<div class="item">
+                <img src="/static/images/AB Direct.png" alt="" />
+              </div>-->
+              <!--<div class="item">
+                <img src="/static/images/Main Design 2-01.jpg" alt="" />
+              </div>-->
+            </div>
+    
+            <a
+              target="_blank" href="https://abdirect.abbl.com/sign-up"
+              class="btn btn-danger btn-block rounded-0"
+            >
+            Click here to visit AB Direct
+            </a>
+          </div>
+          <script>
+            $(document).ready(function(){
+              $('#instructions').hide(); 
+              //$('#instructions').collapse({'toggle':false});
+              //$('#instructions:visible').hide(); 
+  
+              //$('#instructions:hidden').show(); 
+  
+              $("#btnClick").click(function(e){
+                //$('#instructions').collapse({'toggle':true});
+                //$('#instructions').show(); 
+                //$('#instructions:visible').hide(); 
+  
+                var x =  document.getElementById("instructions");
+                //alert (x.style.display);
+                if (x.style.display == "none"){
+                  x.style.display = "block"
+                }else {
+                  x.style.display = "none"
+                }
+  
+                //$('#instructions:hidden').show(); 
+                  
+              });
+                
+  
+            });
+  
+           </script> 
+    
+          <!-- Specific Page JS goes HERE  -->
+          {% block javascripts %}{% endblock javascripts %}
+        </div>
+ 
+      {% endblock content %}
+    </div>
+    

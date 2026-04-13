@@ -1,0 +1,79 @@
+{% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+<!--start block content -->
+{% block content %}
+
+<!--<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="bdrs-3 ov-h bgc-white bd">
+
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="bdrs-3 ov-h bgc-white bd">
+
+                <h3>KYC RISK GRADING </h2>
+
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="bdrs-3 ov-h bgc-white bd">
+
+            </div>
+        </div>
+    </div>
+</div>-->
+
+<div class="container-fluid">
+    <h4 class="c-grey-900 mT-10 mB-30">Search Customer </h4>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bgc-white bd bdrs-3 p-20 mB-20">
+                <h6 class="c-grey-900 mB-20"></h6>
+                <div class="mT-30">
+                    <form method="POST" action="/dashboard/search">
+
+                        <div class="row">
+                            <div class="col-md-4 ">
+
+                            </div>
+                            <div class="col-md-4 ">
+                                <div class="form-group row">
+
+                                    <div class="col-sm-10">
+                                        <input value=" {% if customer_cbs_basic  and customer_cbs_basic is defined %} {{customer_cbs_basic}}  {% endif %}" type="text" class="form-control" name="customer_cbs_basic" id="customer_cbs_basic" placeholder="Search Customer Basic">
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="col-md-4 ">
+                                <!-- Button trigger modal -->
+                                <button type="button " class="btn btn-primary " data-toggle="modal " data-target="#exampleModal">
+                                                        Search
+                                                    </button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- include risk form -->
+<!-- {% include "task/form.html" ignore missing %} -->
+{% include "dashboard/riskform.html" ignore missing %}
+<!--end block content -->
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %} {% endblock javascripts %}

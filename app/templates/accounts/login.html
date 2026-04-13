@@ -1,0 +1,93 @@
+{% extends "layouts/base-fullscreen.html" %} {% block title %} Sign In {% endblock %}
+
+
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<style>
+
+a, .text-action {
+color: #ff0000 !important;
+transition: all 0.2s ease !important;
+}
+.btn {
+    color: #ff0000 !important;
+}   
+</style>
+<main>
+    <!-- Section -->
+    <section class="d-flex align-items-center my-5 mt-lg-6 mb-lg-5">
+        <div class="container">
+            <div class="row justify-content-center form-bg-image" data-background-lg="">
+                <div class="col-12 d-flex align-items-center justify-content-center">
+                    <div class="bg-white shadow-soft border rounded border-light p-4 p-lg-5 w-100 fmxw-500">
+                        <div class="text-center text-md-center mb-4 mt-md-0">
+                            <h6 class="mb-0 h6" >
+                                <p><img src="/static/assets/img/logo_ab.png" width="32%" /> </p>
+                                <a href="/">
+                                    AB BANK - MIS 
+                                </a>
+                            </h6>
+                            <br />
+                            <p>
+                                {% for category, message in get_flashed_messages(with_categories=true) %}
+
+                                <button class="btn btn-{{category}}" id="infoAlert" style="color:white !important;">{{ message }}</button> {% endfor %}
+                            </p>
+
+
+                        </div>
+
+                        <form method="post" action="" class="mt-4">
+
+
+
+                            <!-- Form -->
+                            <div class="form-group mb-4">
+                                <label for="email">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="basic-addon1"><span class="fas fa-user-circle"></span></span>
+                                    <input type="text" name="username" class="form-control" placeholder="Domain ID">
+
+                                </div>
+                            </div>
+                            <!-- End of Form -->
+                            <div class="form-group">
+                                <!-- Form -->
+                                <div class="form-group mb-4">
+                                    <label for="password">Your Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text" id="basic-addon2"><span class="fas fa-unlock-alt"></span></span>
+                                        <input type="password" name="password" class="form-control" placeholder="Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" name="login" class="btn btn-danger"><span style="color:white;"> Sign in</span></button>
+                            </div>
+                            <input
+                          type="hidden"
+                          id="csrf_token"
+                          name="csrf_token"
+                          value="{{csrf_token()}}"
+                        />
+                        </form>
+
+                        <div class="d-flex justify-content-center align-items-center mt-4">
+                            <!--<span class="font-weight-normal">
+                                    &copy; <a  href="/" target="_blank">AB Bank Limited </a> 
+                                   
+                                </span>-->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

@@ -1,0 +1,78 @@
+<style>
+    .sidebar .nav-item .nav-link {
+    color: #f9fafb !important;
+    }
+    .search-bar .form-control{
+        width: 200px !important;
+    }
+</style>
+<!-- As a heading -->
+<nav class="navbar navbar-light bg-light" style="background-color: #EDEDED;">
+    <div class="container-fluid">
+        <div class="col-6">
+            
+            <!--<img src="/static/assets/img/abbanklogo.jpg"  alt="AB Bank Logo">-->
+            <!--<img src="/static/assets/img/AB-Bank-Limited.png" width="15%" alt="AB Bank Logo">-->
+            <!--<img src="/static/assets/img/ab-bank-logo-2104280622.jpg" width="30%" alt="AB Bank Logo"></span> -->
+            
+            <!--<img src="/static/assets/img/rebranding-img-new.png" />-->
+            <img src="/static/assets/img/logo_ab.png" />
+            
+        </div>
+        <div class="col-4 ">
+            <span class="navbar-brand mb-0 h1" style="color: #000; font-size: large;">ACS Report </span>
+        </div>
+        <div class="col-2 ">
+            <span class="navbar-brand mb-0 h1" style="color: #000;">Login User: <strong>{{ current_user.Username }}</strong></span>
+
+          
+          
+            {% if current_user.has_roles('BkashAdmin') %}
+                <span>  <h6> Bkash User </h6></span>
+            {% elif current_user.has_roles('BkashChecker') %}
+                <span>  <h6>Bkash AUTHORIZER</h6></span>
+            {% elif current_user.has_roles('BkashMaker') %}  
+            
+             <span>  <h6>Bkash MAKER</h6></span>
+             {% else %}
+             <span>  <h6>ACS</h6></span>
+            {% endif %}
+        </div>
+
+       
+  
+  
+
+    
+      
+      
+    </div>
+</nav>
+
+
+<!--<nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0" >
+    <div class="container-fluid px-0">
+        <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+            <div class="d-flex align-items-center">
+              
+                <form class="navbar-search form-inline" id="navbar-search-main" method="post" action="/dashboard/searchcustomer">
+                    <div class="input-group input-group-merge search-bar">
+                        <span class="input-group-text" id="topbar-addon">
+                            <span class="fas fa-search"></span>
+                        &nbsp;&nbsp;&nbsp;&nbsp;Customer ID</span>
+                       
+                        <input type="text" name="customer_cbs_basic" value=" {% if customer_cbs_basic  and customer_cbs_basic is defined %} {{customer_cbs_basic}}  {% endif %}" class="form-control" id="customer_cbs_basic" placeholder="Search by Customer Basic" aria-label="Search"
+                            aria-describedby="topbar-addon">
+                        <button class="btn btn-danger " id="searchBtn" type="submit "> Enter</button>
+                    </div>
+                </form>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    
+</nav>-->
+<br>
+<hr>

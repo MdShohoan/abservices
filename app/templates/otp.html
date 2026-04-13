@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AB Bank To bKash OTP</title>
+<title>AB Bank PLC - OTP Page</title>
 <link rel="stylesheet" href="{{url_for('static', filename='bootstrap-5.0.2/css/bootstrap.min.css') }}">
 <script type="text/javascript"> 
 
@@ -23,14 +23,14 @@
 </head>
 
 <body>
-    <div class="pos-f-t">
+    <!--<div class="pos-f-t">
         <nav class="navbar navbar-dark">
             <head>
                 <a href="#" class="nav-link previous round">&#8249;</a>
-                <span class="navbar-text flex-sm-fill text-sm-center"><!--Bank To bKash--></span>
+                <span class="navbar-text flex-sm-fill text-sm-center"></span>
                 <a href="#" class="nav-link next round">&#8250;</a>
           </head>
-      </nav>
+      </nav>-->
 
     </div>
     <div class="container">
@@ -38,7 +38,7 @@
 
             <!-- Just an image -->
 			<nav class="navbar navbar-light bg-light">
-				<a class="navbar-brand" href="#">
+				<a class="navbar-brand" href="/">
 					
                     <img src="{{ url_for('static', filename='image/ab_logo.png') }}" alt="">
 				</a>
@@ -68,9 +68,9 @@
                         <td colspan="2"> 
                                 <div class="text-center"> 
 
-                                    <div id="err-div" class="alert alert-primary" role="alert"></div>
+                                    <div id="err-div" style="display: none;" class="alert alert-danger" role="alert"></div>
                                     <!--<div class="error"> Please try again</div>-->
-                                    <!--<div class="success"></div>-->
+                                    <div class="success alert alert-danger" style="display: none;"></div>
                                     {% with messages = get_flashed_messages(with_categories=true) %}
                                         {% if messages %}
 
@@ -108,8 +108,7 @@
                             <div class="text-center mt-2">
                                 <!--<span class="d-block mobile-text">OTP has been sent to Your Mobile. It will expire</span>-->
                                 <small class="text-muted"><span class="d-block mobile-text" id="countdown"></span></small>
-                                <span class="d-block mobile-text" id="resend"></span>
-                                
+                                <span class="d-block mobile-text" id="resend"></span>    
                                 
                             </div>
                         </td>
@@ -120,6 +119,7 @@
                             <input type="hidden" id="request_type" name="request_type" value="{{type}}"/>
                             <input type="hidden" id="mobile" name="mobile" value="{{mobile}}"/>
                             <input type="hidden" id="trackingcode" name="trackingcode" value="{{trackingcode}}"/>
+                            
                             
                             <div class="text-center">
                                 <div class="btn-group">
@@ -152,7 +152,8 @@
         // A $( document ).ready() block.
         $( document ).ready(function() {
             console.log( "ready!" );
-            $("#err-div").html("").hide();
+            $("#err-div").hide();
+            //$("#err-div").html("").hide();
             //alert ('ready');
             //timer(300);
             
@@ -165,7 +166,7 @@
             $("#err-div").html("").hide();
 	        var number = $("#mobile").val();
 	        var csrf_token = "{{ csrf_token() }}";
-            console.log ('mobile : ' +mobile);
+            console.log ('mobile : ' +number);
             console.log ('token : ' +csrf_token);
             $("#csrf_token").val(csrf_token)
 	        //var csrftoken = "{{ csrf_token() }}";
@@ -185,6 +186,8 @@
                 "action" : "send_otp"
             };
 
+            console.log (input)
+
             $.ajaxSetup({
                 beforeSend: function(xhr, settings) {
                     if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
@@ -195,7 +198,7 @@
 
             //resendOtp(csrf_token);
             $.ajax({
-		        url : base_url+'/resend/',
+		        url : base_url+'profile/resend/',
 		        type : 'POST',
 		        dataType : "json",
 		        data : input,
@@ -209,13 +212,14 @@
                     
                     if (response[0].status=='fail'){
                         
-                        console.log ('URL : ' +response[1].redirectUrl )
+                         console.log ('URL : ' +response[1].redirectUrl )
 				         window.location.href = response[1].redirectUrl;
                        
 
                     }else 
                     {
                         //alert ('Success');
+                        $(".success").html("Successfully !! New OTP has been sent again.").show();
                         timer(otp_expire_time);
                         document.getElementById("resend").innerHTML = '';
                         document.getElementById("resendBtn").disabled=true;    
@@ -260,6 +264,7 @@ function cancelOTP(){
     //var csrf_token = "{{ csrf_token() }}";
     //var mobile = $("#mobile").val();
     var csrf_token = $("#csrf_token").val();
+    console.log ('otp cancel...');
     //alert (csrf_token);
     //alert (otp);
     var input = {
@@ -277,9 +282,12 @@ function cancelOTP(){
                     }
                 }
     });
+    ajax_url = base_url+'profile/cancel/';  
+    console.log (ajax_url);
+    //alert (url);
     
     $.ajax({
-        url : base_url+'otp/cancel/',
+        url : ajax_url,
         type : 'POST',
         dataType : "json",
         data : input,
@@ -299,6 +307,127 @@ function cancelOTP(){
             alert("error");
         }
     });
+}
+
+function verifyOTP() 
+{
+	console.log ('verify otp...')
+    
+    $("#err-div").html("").hide();
+	$(".success").html("").hide();
+	let otp 			= $("#mobileOtp").val();
+	//let type 			= $('#request_type').val();
+	
+	if (otp ==""){
+
+		$("#err-div").html("OTP Cannot be blank.").show();
+		return false;
+	}
+
+	$('#submitBtn').prop('disabled', true);
+	
+	let trackingcode	= $("#trackingcode").val();
+	let type 			= $("#request_type").val();
+    console.log ('type...' + type)
+	//alert (type);
+	//var csrf_token = "{{ csrf_token() }}";
+	//var mobile = $("#mobile").val();
+	var csrf_token = $("#csrf_token").val();
+	//alert (csrf_token);
+    //alert (otp);
+	var input = {
+		"otp" : otp,
+		"action" : "verify_otp",
+		"csrf_token" : csrf_token,
+		"trackingcode" : trackingcode,
+		"request_type" : type
+	};
+
+    console.log (input)
+
+	$.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            
+			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+    });
+	
+	//if (otp.length == 6 && otp != null) {
+		if (otp != null) {
+		console.log ('ajax');
+		$("#spinning-div").show();
+		
+        if (type == 'tin'){
+            ajax_url =  base_url+'verify/'+otp+'/'+type+'/';
+
+        }
+        else if (type == 'formc'){
+            ajax_url =  base_url+'/formc/verify/'+otp+'/'+type+'/';
+
+        }
+        
+        else {
+            ajax_url =  base_url+'/profile/verify/'+otp+'/'+type+'/';
+        }
+        
+       
+		//ajax_url =  '/verify/'+otp+'/'+type+'/'
+		console.log ('ajax_url:' + ajax_url)
+        $.ajax({
+			//url : base_url+'verify/'+otp+'/'+type+'/',
+			url :ajax_url , 
+			type : 'POST',
+			dataType : "json",
+			data : input,
+			//headers : {'charset': 'utf-8', 'Content-Type': 'application/json','Username':'bkashabbl','Password':'abbl@123'},
+			success : function(response) {
+				$('#submitBtn').prop('disabled', false);
+				console.log (response);
+                console.log (response[0].status);
+                console.log (response[0])
+                console.log (response[1])
+
+				//alert (response[1].redirectUrl);
+				//alert (response[0].status);
+				//alert (response[2].message);
+				//console.log (response);
+				//spinning-div
+				
+				if (response[0].status=='warning'){
+					//$(".error").html(response[2].message)
+					$("#spinning-div").hide();
+					$("#err-div").html(response[2].message).show();
+					//$(".success").html("").hide();
+					console.log (response);
+
+				}else if (response[0].status=='fail'){
+                    window.location.href = response[1].redirectUrl;
+                }
+                else{
+					//alert (response[1].redirectUrl)
+					$("#spinning-div").hide();
+					console.log ('URL : ' +response[1].redirectUrl )
+					console.log (response);
+					//alert (response[1].redirectUrl);
+					//$("#err-div").html(response[1].message).show();
+					window.location.href = response[1].redirectUrl;
+					//$.redirect(response[1].redirectUrl, {"Content-Type": "application/json", "Username":"bkashabbl","Password":"abbl@123"});
+				}
+				
+				
+                //$("." + response.type).html(response[1].redirectUrl)
+				//$("." + response.type).show();
+			},
+			error : function() {
+				alert("error");
+			}
+		});
+	} else {
+		$(".error").html('You have entered wrong OTP.')
+		$(".error").show();
+	}
 }
 
 

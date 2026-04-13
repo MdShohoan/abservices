@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>AB Bank Limited</title>
+    <!-- Bootstrap -->
+    <link
+      rel="stylesheet"
+      href="/static/formc/bootstrap-5.0.2/css/bootstrap.min.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="/static/formc/css/flexslider.css"
+      type="text/css"
+      media="screen"
+    />
+    <link rel="stylesheet" href="/static/formc/css/style.css" />
+    <style>
+      @media print {
+        .pagebreak {
+          clear: both;
+          page-break-before: always;
+        } /* page-break-after works, as well */
+      }
+
+      .table > tbody > tr > td {
+        border-top: 1px solid;
+      }
+
+      .form-header-table-cell-text {
+        width: 20%;
+        border: 1px solid;
+        text-align: center;
+      }
+
+      .form-header-table-cell-blank {
+        width: 20%;
+      }
+
+      .underline-text {
+        text-decoration: underline;
+      }
+
+      .text-align-center {
+        text-align: center;
+      }
+
+      .center-align {
+        display: flex;
+        justify-content: center;
+      }
+
+      .right-align {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .tableStyles {
+        width: 75%;
+      }
+
+      .tableCellBig {
+        width: 12%;
+        height: 30px;
+        border: 1px solid;
+        text-align: center;
+      }
+
+      .tableCellSmall {
+        width: 3%;
+        height: 30px;
+        border: 1px solid;
+      }
+
+      .borderedDiv {
+        border: 1px solid;
+        height: 340px;
+        padding: 10px;
+      }
+
+      .tableSmallStyles {
+        width: 75%;
+      }
+
+      .tableSmallCellBig {
+        width: 25%;
+        height: 30px;
+        border: 1px solid;
+        text-align: center;
+      }
+
+      .tableSmallCellSmall {
+        width: 25%;
+        height: 30px;
+        border: 1px solid;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="formbold-main-wrapper">
+      <div class="formbold-form-wrapper">
+        <div class="table-responsive">
+          <table class="table">
+            <tbody>
+              <tr>
+                <td class="form-header-table-cell-text">See Chapter S</td>
+                <td class="form-header-table-cell-text">Para 10</td>
+                <td
+                  class="form-header-table-cell-blank"
+                  style="border-top: none"
+                />
+                <td class="form-header-table-cell-text">APP. 5</td>
+                <td class="form-header-table-cell-text">10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="center-align">
+          <label class="underline-text">FORM-C</label>
+        </div>
+
+        <div class="center-align">
+          <label class="text-align-center">
+            DECLARATION FOR REMITTANCE RECEIVED FROM FOREIGN COUNTRY OF AMOUNT
+            EXCEEDING USD 20,000 OR EQUIVALENT
+          </label>
+        </div>
+
+        <br />
+
+        <p>
+            I/We do hereby declare that I/we have received remittance of <span class="text-decoration-underline fs-4" id="currency">{{formc_list.remittance_currency }}</span> <span class="text-decoration-underline fs-4" id="number">{{ formc_list.remittance_amount|int }}</span> in words  <span class="text-decoration-underline fs-4" id="words"></span> 
+             remitted or to be remitted by <span id="bank" class="text-decoration-underline fs-4" >{{formc_list.remitted_bank_name }},{{formc_list.remitted_bank_address }} </span> on Account of <span id="remitter" class="text-decoration-underline fs-4">{{formc_list.remitter_name }} ,{{formc_list.remitter_address }}  </span>
+            for the purpose of <span id="" class="text-decoration-underline fs-4"> {{ purpose}}</span>
+        </p>
+
+        
+
+        <br />
+
+        <div class="right-align">
+          <div style="width: 50%"></div>
+          <div class="center-align" style="width: 50%"> <span class=" fs-4">{{formc_list.applicant_name}}</span></div>
+        </div>
+
+        <div class="right-align">
+          <hr
+            style="
+              width: 50%;
+              background-color: black;
+              margin-bottom: 5px;
+              margin-top: 5px;
+            "
+          />
+        </div>
+
+        <div class="right-align">
+          <div style="width: 50%"></div>
+          <div class="center-align" style="width: 50%">
+            <label>(Name of Applicant)</label>
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 36%"></div>
+          <div style="width: 14%">
+            <label>Nationality</label>
+          </div>
+          <div style="width: 50%">
+            <label style="font-size: small; font-weight: normal"
+              ><span class=" fs-4">{{formc_list.applicant_nationality.capitalize()}}</span></label
+            >
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 36%"></div>
+          <div style="width: 14%"></div>
+          <div style="width: 50%">
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 7%">
+            <label>Date</label>
+          </div>
+          <div style="width: 29%">{{print_date}}</div>
+          <div style="width: 14%">
+            <label>Address</label>
+          </div>
+          <div style="width: 50%">
+            <label style="font-size: small; font-weight: normal"
+              ><span class=" fs-4">{{formc_list.applicant_address}}</span></label
+            >
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 7%"></div>
+          <div style="width: 29%"></div>
+          <div style="width: 14%"></div>
+          <div style="width: 50%">
+            
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <br />
+        <span class=" right-align text-decoration-underline fs-4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+        <br />
+
+        <div class="right-align">  Signature and Stamp of the applicant</div>
+
+        <!--<div class="pagebreak"> </div>-->
+
+        <p style="margin-top: 5px">
+          From-C : Inward Remittance exceeding USD 20,000 ("Seri thousand) or
+          equivalent.
+        </p>
+
+        <div class="center-align">
+          <table class="tableStyles">
+            <tr>
+              <td class="tableCellBig">Month</td>
+              <td class="tableCellBig" colspan="4">
+                Country of ordering Customer
+              </td>
+              <td class="tableCellBig" colspan="4">Purpose</td>
+              <td class="tableCellBig" colspan="4">
+                Amount In ( State Currency)
+              </td>
+            </tr>
+            <tr>
+              <td class="tableCellBig"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+              <td class="tableCellSmall"></td>
+            </tr>
+          </table>
+        </div>
+
+        <br />
+
+        <div class="right-align">
+          <div style="width: 70%"></div>
+          <div class="right-align" style="width: 30%">
+            <label>Coded by</label>
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 70%"></div>
+          <div style="width: 30%">
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <br />
+
+        <div class="right-align">
+          <div style="width: 70%"></div>
+          <div class="right-align" style="width: 30%">
+            <label>Checked by</label>
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 70%"></div>
+          <div style="width: 30%">
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <br />
+
+        <div>
+          <div style="width: 27%">Purpose of remittance</div>
+          <div style="width: 73%">{{ purpose}}</div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 27%"></div>
+          <div style="width: 73%">
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <br />
+
+        <p>
+          We hereby certify that we are satisfied as to the identity of the
+          applicant and that we have seen documentary evidence which satisfies
+          us as to the bonafides of the declaration made on this form.
+        </p>
+
+        <br />
+
+        <div class="right-align">
+          <div style="width: 45%"></div>
+          <div style="width: 55%">
+            <hr style="background-color: black; margin: 0" />
+          </div>
+        </div>
+
+        <div class="right-align">
+          <div style="width: 7%">
+            <label>Date</label>
+          </div>
+          <div style="width: 38%">{{print_date}}</div>
+          <div class="center-align" style="width: 55%">
+            Signature and Stamp of the Authorised Dealer
+          </div>
+        </div>
+
+        <div class="right-align">Contd, P/2</div>
+
+        <div class="pagebreak"></div>
+
+        <div class="table-responsive" style="margin-top: 10px">
+          <table class="table">
+            <tbody>
+              <tr>
+                <td class="form-header-table-cell-text">See Chapter S</td>
+                <td class="form-header-table-cell-text">Para 10</td>
+                <td
+                  class="form-header-table-cell-blank"
+                  style="border-top: none; text-align: center"
+                >
+                  Page-2
+                </td>
+                <td class="form-header-table-cell-text">APP. 5</td>
+                <td class="form-header-table-cell-text">10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 20px">
+          <div class="borderedDiv">
+            <div class="center-align">
+              (Space for use by the Bangladesh Bank)
+            </div>
+
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+
+            <div>BANGLADESH BANK</div>
+            <div>Foreign Exchange Policy Department</div>
+
+            <br />
+            <br />
+
+            <div class="right-align">
+              <div style="width: 7%">
+                <label style="font-weight: normal">Date</label>
+              </div>
+              <div style="width: 63%">{{print_date}}</div>
+              <div style="width: 30%" class="center-align">
+                <label style="font-weight: normal; font-style: italic"
+                  >Assistant Director</label
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <br />
+
+        <p>
+          Note: Full details must be given for all remittances which are of
+          capital nature. In the case of amounts for investment in Bangladesh in
+          shares or business, the reasons why the investment is required must be
+          clearly indicated. In the case of the remittance of the sale proceeds
+          of securities the name of the true owner of the securities must be
+          given arid also the approxirnate date of purchase.
+        </p>
+
+        <br />
+
+        <div class="right-align">
+          <div style="width: 50%">
+            <table class="tableSmallStyles">
+              <tr>
+                <td colspan="3" class="tableSmallCellBig">Inward ID</td>
+              </tr>
+              <tr>
+                <td class="tableSmallCellSmall">AD Code</td>
+                <td class="tableSmallCellSmall">Ref.</td>
+                <td class="tableSmallCellSmall">Year</td>
+              </tr>
+              <tr>
+                <td colspan="3" class="tableSmallCellBig"></td>
+              </tr>
+            </table>
+          </div>
+          <div class="right-align" style="width: 50%">
+            <table class="tableSmallStyles">
+              <tr>
+                <td colspan="3" class="tableSmallCellBig">Outward Reference</td>
+              </tr>
+              <tr>
+                <td class="tableSmallCellSmall">AD Code</td>
+                <td class="tableSmallCellSmall">Ref.</td>
+                <td class="tableSmallCellSmall">Year</td>
+              </tr>
+              <tr>
+                <td colspan="3" class="tableSmallCellBig"></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+<script src="/static/formc/bootstrap-5.0.2/js/bootstrap.js"></script>
+<script>
+function printData()
+{
+   var divToPrint=document.getElementById("print-div");
+   newWin= window.open("");
+   newWin.document.write(divToPrint.outerHTML);
+   newWin.print();
+   newWin.close();
+}
+function updateFormc(ajaxurl)
+{
+    
+    $.get(ajaxurl, function(data, status){
+     //alert("Data: " + data + "\nStatus: " + status);
+     conosle.log ("Data: " + data + "\nStatus: " + status);
+  });
+
+
+}
+
+$(document).ready(function () {
+    console.log ('test');
+    let number = $('#number').html();
+    console.log (number);
+    let amount_in_words = inWords(number);
+    $('#words').html(amount_in_words);
+    console.log (amount_in_words);
+    //console.log(this.href.substring(this.href.lastIndexOf('/') + 1));
+    var url = $(location).attr('href'),
+    parts = url.split("/"),
+    last_part = parts[parts.length-1];
+    console.log (last_part);
+    ajax_url = '/dashboard/updateformc/'+last_part
+    $('button').on('click',function(){
+        
+        updateFormc(ajax_url);
+        printData();    
+    })
+
+});
+
+var a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+var b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+
+function inWords (num) {
+    if ((num = num.toString()).length > 9) return 'overflow';
+    n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return; var str = '';
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
+    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
+    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'only ' : '';
+    return str;
+}
+
+document.getElementById('number').onkeyup = function () {
+    document.getElementById('words').innerHTML = inWords(document.getElementById('number').value);
+};
+</script>
+
+  </body>
+</html>

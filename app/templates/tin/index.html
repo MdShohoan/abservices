@@ -1,0 +1,95 @@
+{% extends "layouts/base2.html" %} {% block title %} Dashboard {% endblock title
+    %}
+    <!-- Specific CSS goes HERE  -->
+    {% block stylesheets %}{% endblock stylesheets %} 
+    
+    {% block content %}
+  
+    
+    <div class="my-3">
+        <div class="row ">
+          <div class="col-12 col-md-8">
+            <div  class="alert alert-success text-left ">
+        
+              <p>Greetings valued customer! Upload  your <strong>tin Certificate</strong> </p>
+             
+            </div>
+            
+            <div class="">
+              <div>
+                <form action="/tin/" method="post">
+                  <div class="form-group row">
+                    <label for="account_number" class="col-md-3 col-form-label"
+                      ><strong>Account Number</strong></label
+                    >
+                    <div class="col-md-6">
+                      <div class="input-group mb-3">
+                        <input
+                          type="text"
+                          class="form-control rounded-0"
+                          name="accnt_no"
+                          id="inputAccount"
+                          placeholder="Please Enter Your Account Number"
+                          aria-label="Customer's Account Number"
+                          required
+                          minlength="13"
+                          maxlength="13"
+                          aria-describedby="basic-addon2"
+                        />
+                        <input
+                          type="hidden"
+                          id="csrf_token"
+                          name="csrf_token"
+                          value="{{csrf_token()}}"
+                        />
+                        <div class="input-group-append">
+                          <button class="btn btn-danger rounded-0" type="submit">
+                            Submit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+    
+                <div class="my-3">
+                  <div class="card bg-light mb-3 rounded-0">
+                    <div class="card-header text-left">Instruction to Update Tax Return Copy </div>
+                    <div class="card-body">
+                      <small>
+                        <ol>
+                          <li>Please enter your 13 digits account number</li>
+                          <li>
+                            An OTP will be sent to your mobile number, which is
+                            tagged with the account
+                          </li>
+                          <li>Verify the request using that OTP</li>
+                          <li>
+                             please upload your TAX Return Copy 
+                          </li>
+                          <li>
+                            Uploaded copy will be reviewed by Bank Authority
+                          </li>
+                         
+                        </ol>
+                      </small>
+                      <!--<small class="card-text text-danger">
+                        * Note - Statement period is from
+                        <strong>July 2022 to December 2022</strong>
+                      </small>-->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+    
+          
+    
+          <!-- Specific Page JS goes HERE  -->
+          {% block javascripts %}{% endblock javascripts %}
+        </div>
+ 
+      {% endblock content %}
+    </div>
+    
