@@ -1,7 +1,0 @@
-Dear Valued AB Bank Customer,
-
-Thank you for using AB Bank  Facility. 
-{alert_message}
-
-Best Regards,
-AB Bank Limited
