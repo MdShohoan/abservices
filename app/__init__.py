@@ -187,6 +187,7 @@ from app.main.dashboard import dashboard as dashboard_bp
 from app.main.auth import auth as auth_bp
 from app.main.formc import formc as formc_bp
 from app.main.career import career as career_bp
+from app.main.swift_remittance import swift_remittance as swift_remittance_bp
 
 
 
@@ -199,6 +200,7 @@ app.register_blueprint(auth_bp,url_prefix="/")
 app.register_blueprint(dashboard_bp,url_prefix="/dashboard")
 app.register_blueprint(formc_bp,url_prefix="/formc")
 app.register_blueprint(career_bp,url_prefix="/career")
+app.register_blueprint(swift_remittance_bp)
 
 # register error blueprint
 from app.errors import errors as errors_bp

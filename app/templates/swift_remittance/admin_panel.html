@@ -1,0 +1,78 @@
+{% extends "layouts/admin_base.html" %}
+{% block title %}SWIFT Remittance{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+            <li class="breadcrumb-item"><a href="/dashboard"><span class="fas fa-home"></span></a></li>
+            <li class="breadcrumb-item active" aria-current="page">SWIFT Remittance</li>
+        </ol>
+    </nav>
+</div>
+
+{% for category, message in get_flashed_messages(with_categories=true) %}
+<div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+{% endfor %}
+
+{% if not grouped_records %}
+<div class="card border-light shadow-sm">
+    <div class="card-body">
+        <p class="mb-0">No records found in SWIFT settlement data.</p>
+    </div>
+</div>
+{% endif %}
+
+{% for branch_name, records in grouped_records.items() %}
+<div class="card border-light shadow-sm mb-4">
+    <div class="card-header">
+        <h2 class="h5 mb-0">{{ branch_name }} ({{ records|length }} records)</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-items-center table-flush mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Account Name</th>
+                    <th>Customer Name</th>
+                    <th>Phone Number</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in records %}
+                <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.account_name }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.phone_number }}</td>
+                    <td>
+                        {% if row.status == 'verified' %}
+                        <span class="badge bg-success">verified</span>
+                        {% elif row.status == 'submitted' %}
+                        <span class="badge bg-info">submitted</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="d-flex gap-1">
+                        <form method="post" action="{{ url_for('swift_remittance.send_secure_link', record_id=row.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-secondary">Send SMS</button>
+                        </form>
+                        {% if row.status == 'submitted' %}
+                        <form method="post" action="{{ url_for('swift_remittance.mark_verified', record_id=row.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-success">Mark Verified</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

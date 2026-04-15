@@ -134,6 +134,12 @@ class DevelopmentConfig(Config):
     
     OTP_EXPIRE_TIME = 2*60 #1*60
 
+    SWIFT_SETTLEMENT_SCHEMA = 'public'
+    SWIFT_SETTLEMENT_TABLE = 'settlement_data'
+    SWIFT_LINK_EXPIRY_SECONDS = 15 * 60
+    SWIFT_OTP_EXPIRY_SECONDS = 5 * 60
+    SWIFT_UPLOAD_FOLDER = os.path.join(directory, 'app', 'static', 'uploads', 'swift_remittance')
+
     
     USER_ENABLE_EMAIL= False
     
