@@ -33,7 +33,7 @@ STATUS_VERIFIED = "verified"
 
 
 def _qualified_table_name():
-    schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "public")
+    schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "abbl")
     table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "settlement_data")
     if schema:
         return f'"{schema}"."{table}"'
@@ -76,7 +76,7 @@ def _ensure_upload_dir():
 
 
 def _read_table_columns():
-    schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "public")
+    schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "abbl")
     table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "settlement_data")
     q = text(
         """
@@ -209,8 +209,37 @@ def admin_panel():
         LOG.exception("SWIFT admin panel load failed: %s", ex)
         flash("Unable to load SWIFT remittance data right now.", "danger")
         return render_template("swift_remittance/admin_panel.html", grouped_records={})
+print("SCHEMA:", current_app.config.get("SWIFT_SETTLEMENT_SCHEMA"))
 
+# @swift_remittance.route("/send-link/<int:record_id>", methods=["POST"])
+# @login_required
+# def send_secure_link(record_id):
+#     try:
+#         record = _fetch_record(record_id)
+#         if not record:
+#             flash("Record not found.", "warning")
+#             return redirect(url_for("swift_remittance.admin_panel"))
 
+#         token = _serializer().dumps({"record_id": record_id, "phone": record.get("phone_number", "")})
+#         verify_url = url_for("swift_remittance.verify_entry", token=token, _external=True)
+#         sms_message = (
+#             "AB Bank SWIFT Remittance: Complete your verification using this secure link "
+#             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
+#         )
+
+#         sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
+#         if sms_response and sms_response.get("status") == "SUCCESS":
+#             # Reuse existing SMS logging table.
+#             sms_response["trackingcode"] = str(record_id)
+#             app.utils.add_ssl_otp(sms_response, str(record_id))
+#             flash("Secure link sent successfully.", "success")
+#         else:
+#             flash("SMS could not be sent. Please try again.", "danger")
+#     except Exception as ex:
+#         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
+#         flash("Unexpected error while sending SMS.", "danger")
+
+#     return redirect(url_for("swift_remittance.admin_panel"))
 @swift_remittance.route("/send-link/<int:record_id>", methods=["POST"])
 @login_required
 def send_secure_link(record_id):
@@ -220,27 +249,35 @@ def send_secure_link(record_id):
             flash("Record not found.", "warning")
             return redirect(url_for("swift_remittance.admin_panel"))
 
-        token = _serializer().dumps({"record_id": record_id, "phone": record.get("phone_number", "")})
-        verify_url = url_for("swift_remittance.verify_entry", token=token, _external=True)
+        token = _serializer().dumps({
+            "record_id": record_id,
+            "phone": record.get("phone_number", "")
+        })
+
+        verify_url = url_for(
+            "swift_remittance.verify_entry",
+            token=token,
+            _external=True
+        )
+
         sms_message = (
             "AB Bank SWIFT Remittance: Complete your verification using this secure link "
             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
         )
 
-        sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
-        if sms_response and sms_response.get("status") == "SUCCESS":
-            # Reuse existing SMS logging table.
-            sms_response["trackingcode"] = str(record_id)
-            app.utils.add_ssl_otp(sms_response, str(record_id))
-            flash("Secure link sent successfully.", "success")
-        else:
-            flash("SMS could not be sent. Please try again.", "danger")
+        # ✅ TEST MODE (no SMS)
+        print("\n====== SWIFT TEST LINK ======")
+        print(f"Phone: {record['phone_number']}")
+        print(f"Link: {verify_url}")
+        print("================================\n")
+
+        flash("Test mode: Link printed in console.", "success")
+
     except Exception as ex:
         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
-        flash("Unexpected error while sending SMS.", "danger")
+        flash("Unexpected error.", "danger")
 
     return redirect(url_for("swift_remittance.admin_panel"))
-
 
 @swift_remittance.route("/mark-verified/<int:record_id>", methods=["POST"])
 @login_required
@@ -277,6 +314,54 @@ def verify_entry():
         return redirect(url_for("main.index"))
 
 
+# @swift_remittance.route("/send-otp", methods=["POST"])
+# def send_otp():
+#     token = request.form.get("token", "").strip()
+#     if not token:
+#         flash("Invalid request.", "danger")
+#         return redirect(url_for("main.index"))
+
+#     try:
+#         payload = _serializer().loads(token, max_age=_token_max_age_seconds())
+#         record_id = int(payload.get("record_id"))
+#         record = _fetch_record(record_id)
+#         if not record:
+#             flash("Record not found.", "danger")
+#             return redirect(url_for("main.index"))
+
+#         otp = str(app.utils.otpgen())
+#         expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=_otp_expiry_seconds())
+#         otp_hash = sha256(otp.encode("utf-8")).hexdigest()
+
+#         session["swift_otp"] = {
+#             "record_id": record_id,
+#             "otp_hash": otp_hash,
+#             "expires_at": expires_at.isoformat(),
+#             "verified": False,
+#             "token": token,
+#             "tries": 0,
+#         }
+
+#         sms_message = (
+#             f"AB Bank SWIFT Remittance OTP: {otp}. "
+#             f"This OTP expires in {_otp_expiry_seconds() // 60} minutes."
+#         )
+#         sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
+#         if sms_response and sms_response.get("status") == "SUCCESS":
+#             sms_response["trackingcode"] = f"swift-otp-{record_id}"
+#             app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
+#             flash("OTP sent successfully.", "success")
+#         else:
+#             flash("Failed to send OTP SMS.", "danger")
+
+#         return redirect(url_for("swift_remittance.verify_entry", token=token))
+#     except SignatureExpired:
+#         flash("Verification link expired.", "danger")
+#         return redirect(url_for("main.index"))
+#     except Exception as ex:
+#         LOG.exception("SWIFT OTP send failed: %s", ex)
+#         flash("Unable to send OTP now.", "danger")
+#         return redirect(url_for("main.index"))
 @swift_remittance.route("/send-otp", methods=["POST"])
 def send_otp():
     token = request.form.get("token", "").strip()
@@ -305,19 +390,16 @@ def send_otp():
             "tries": 0,
         }
 
-        sms_message = (
-            f"AB Bank SWIFT Remittance OTP: {otp}. "
-            f"This OTP expires in {_otp_expiry_seconds() // 60} minutes."
-        )
-        sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
-        if sms_response and sms_response.get("status") == "SUCCESS":
-            sms_response["trackingcode"] = f"swift-otp-{record_id}"
-            app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
-            flash("OTP sent successfully.", "success")
-        else:
-            flash("Failed to send OTP SMS.", "danger")
+        # ✅ TEST MODE (NO SMS)
+        print("\n====== SWIFT TEST OTP ======")
+        print(f"Phone: {record['phone_number']}")
+        print(f"OTP: {otp}")
+        print("================================\n")
+
+        flash(f"Test OTP: {otp}", "success")
 
         return redirect(url_for("swift_remittance.verify_entry", token=token))
+
     except SignatureExpired:
         flash("Verification link expired.", "danger")
         return redirect(url_for("main.index"))
@@ -325,7 +407,6 @@ def send_otp():
         LOG.exception("SWIFT OTP send failed: %s", ex)
         flash("Unable to send OTP now.", "danger")
         return redirect(url_for("main.index"))
-
 
 @swift_remittance.route("/verify-otp", methods=["POST"])
 def verify_otp():
