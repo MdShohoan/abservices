@@ -133,9 +133,9 @@ class DevelopmentConfig(Config):
     MAX_OTP_LIMIT = 3
     
     OTP_EXPIRE_TIME = 2*60 #1*60
-
     SWIFT_SETTLEMENT_SCHEMA = 'abbl'
-    SWIFT_SETTLEMENT_TABLE = 'settlement_data'
+    SWIFT_SETTLEMENT_TABLE  = 'swift_details'   # was: 'settlement_data'
+
     SWIFT_LINK_EXPIRY_SECONDS = 15 * 60
     SWIFT_OTP_EXPIRY_SECONDS = 5 * 60
     SWIFT_UPLOAD_FOLDER = os.path.join(directory, 'app', 'static', 'uploads', 'swift_remittance')

@@ -34,7 +34,7 @@ STATUS_VERIFIED = "verified"
 
 def _qualified_table_name():
     schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "abbl")
-    table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "settlement_data")
+    table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "swift_details")
     if schema:
         return f'"{schema}"."{table}"'
     return f'"{table}"'
@@ -77,7 +77,7 @@ def _ensure_upload_dir():
 
 def _read_table_columns():
     schema = current_app.config.get("SWIFT_SETTLEMENT_SCHEMA", "abbl")
-    table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "settlement_data")
+    table = current_app.config.get("SWIFT_SETTLEMENT_TABLE", "swift_details")
     q = text(
         """
         SELECT column_name
@@ -91,30 +91,63 @@ def _read_table_columns():
 
 
 def _selectable_columns():
-    base = {"id", "account_name", "phone_number", "customer_name", "branch_name"}
-    optional = {"status", "tin", "email", "nid_front_path", "nid_back_path", "updated_at"}
+    """
+    New table: swift_details
+    Fields:
+        id, network, sender, receiver, msg_reference, msg_type,
+        msg_received_date, msg_received_time, msg_sent_date, msg_sent_time,
+        currency_code, value_date, amount, transaction_reference,
+        receiver_address, account, mobile, email, email_status,
+        otp_status, doc_status, created_at, doc_link_creator, url_reference
+    """
+    base = {
+        "id", "network", "sender", "receiver", "msg_reference", "msg_type",
+        "msg_received_date", "msg_received_time", "msg_sent_date", "msg_sent_time",
+        "currency_code", "value_date", "amount", "transaction_reference",
+        "receiver_address", "account", "mobile",
+    }
+    optional = {
+        "email", "email_status", "otp_status", "doc_status",
+        "created_at", "doc_link_creator", "url_reference",
+    }
     available = _read_table_columns()
-    return [col for col in list(base) + sorted(optional) if col in available]
+    ordered = (
+        ["id", "network", "sender", "receiver", "msg_reference", "msg_type",
+         "msg_received_date", "msg_received_time", "msg_sent_date", "msg_sent_time",
+         "currency_code", "value_date", "amount", "transaction_reference",
+         "receiver_address", "account", "mobile"]
+        + sorted(optional)
+    )
+    return [col for col in ordered if col in available]
 
 
 def _fetch_records():
     cols = _selectable_columns()
-    if not {"id", "account_name", "phone_number", "customer_name", "branch_name"}.issubset(set(cols)):
-        raise RuntimeError("Required columns missing from settlement_data table.")
+    required = {"id", "account", "mobile", "sender", "receiver"}
+    if not required.issubset(set(cols)):
+        raise RuntimeError("Required columns missing from swift_details table.")
 
     select_clause = ", ".join([f'"{col}"' for col in cols])
     sql = text(
         f"""
         SELECT {select_clause}
         FROM {_qualified_table_name()}
-        ORDER BY "branch_name" ASC, "id" DESC
+        ORDER BY "id" DESC
         """
     )
     rows = db.session.execute(sql).mappings().all()
     normalized = []
     for row in rows:
         item = dict(row)
-        item["status"] = _safe_status_value(item.get("status"))
+        item["doc_status"] = _safe_status_value(item.get("doc_status"))
+        item["otp_status"] = _safe_status_value(item.get("otp_status"))
+        item["email_status"] = _safe_status_value(item.get("email_status"))
+        # Provide display-friendly aliases used in templates
+        item.setdefault("customer_name", item.get("receiver", ""))
+        item.setdefault("account_name", item.get("account", ""))
+        item.setdefault("phone_number", item.get("mobile", ""))
+        item.setdefault("branch_name", item.get("network", "Unknown"))
+        item.setdefault("status", item.get("doc_status", STATUS_PENDING))
         normalized.append(item)
     return normalized
 
@@ -134,17 +167,30 @@ def _fetch_record(record_id):
     if not row:
         return None
     item = dict(row)
-    item["status"] = _safe_status_value(item.get("status"))
+    item["doc_status"] = _safe_status_value(item.get("doc_status"))
+    item["otp_status"] = _safe_status_value(item.get("otp_status"))
+    item["email_status"] = _safe_status_value(item.get("email_status"))
+    # Aliases for template compatibility
+    item.setdefault("customer_name", item.get("receiver", ""))
+    item.setdefault("account_name", item.get("account", ""))
+    item.setdefault("phone_number", item.get("mobile", ""))
+    item.setdefault("branch_name", item.get("network", "Unknown"))
+    item.setdefault("status", item.get("doc_status", STATUS_PENDING))
     return item
 
 
-def _update_record_status(record_id, status):
+def _update_record_status(record_id, doc_status):
+    """Update doc_status (and otp_status if relevant) in swift_details."""
     columns = _read_table_columns()
-    set_parts = ['"status" = :status']
-    params = {"record_id": record_id, "status": status}
-    if "updated_at" in columns:
-        set_parts.append('"updated_at" = :updated_at')
-        params["updated_at"] = datetime.datetime.now()
+    set_parts = []
+    params = {"record_id": record_id}
+
+    if "doc_status" in columns:
+        set_parts.append('"doc_status" = :doc_status')
+        params["doc_status"] = doc_status
+
+    if not set_parts:
+        return  # nothing to update
 
     sql = text(
         f"""
@@ -157,26 +203,74 @@ def _update_record_status(record_id, status):
     db.session.commit()
 
 
-def _update_submission_fields(record_id, tin, email, nid_front_web_path, nid_back_web_path):
+def _update_otp_status(record_id, otp_status_value):
+    """Update otp_status field in swift_details."""
+    columns = _read_table_columns()
+    if "otp_status" not in columns:
+        return
+    sql = text(
+        f"""
+        UPDATE {_qualified_table_name()}
+        SET "otp_status" = :otp_status
+        WHERE "id" = :record_id
+        """
+    )
+    db.session.execute(sql, {"record_id": record_id, "otp_status": otp_status_value})
+    db.session.commit()
+
+
+def _update_email_status(record_id, email_status_value):
+    """Update email_status field in swift_details."""
+    columns = _read_table_columns()
+    if "email_status" not in columns:
+        return
+    sql = text(
+        f"""
+        UPDATE {_qualified_table_name()}
+        SET "email_status" = :email_status
+        WHERE "id" = :record_id
+        """
+    )
+    db.session.execute(sql, {"record_id": record_id, "email_status": email_status_value})
+    db.session.commit()
+
+
+def _update_url_reference(record_id, url_ref):
+    """Store the secure link token reference in url_reference field."""
+    columns = _read_table_columns()
+    if "url_reference" not in columns:
+        return
+    sql = text(
+        f"""
+        UPDATE {_qualified_table_name()}
+        SET "url_reference" = :url_reference
+        WHERE "id" = :record_id
+        """
+    )
+    db.session.execute(sql, {"record_id": record_id, "url_reference": url_ref})
+    db.session.commit()
+
+
+def _update_submission_fields(record_id, email_value, doc_link):
+    """
+    After document upload, update email, doc_status = 'submitted',
+    and doc_link_creator with the upload path reference.
+    """
     columns = _read_table_columns()
     updates = []
     params = {"record_id": record_id}
 
-    if "tin" in columns:
-        updates.append('"tin" = :tin')
-        params["tin"] = tin
     if "email" in columns:
         updates.append('"email" = :email')
-        params["email"] = email
-    if "nid_front_path" in columns:
-        updates.append('"nid_front_path" = :nid_front_path')
-        params["nid_front_path"] = nid_front_web_path
-    if "nid_back_path" in columns:
-        updates.append('"nid_back_path" = :nid_back_path')
-        params["nid_back_path"] = nid_back_web_path
-    if "updated_at" in columns:
-        updates.append('"updated_at" = :updated_at')
-        params["updated_at"] = datetime.datetime.now()
+        params["email"] = email_value
+
+    if "doc_link_creator" in columns:
+        updates.append('"doc_link_creator" = :doc_link_creator')
+        params["doc_link_creator"] = doc_link
+
+    if "doc_status" in columns:
+        updates.append('"doc_status" = :doc_status')
+        params["doc_status"] = STATUS_SUBMITTED
 
     if updates:
         sql = text(
@@ -187,16 +281,19 @@ def _update_submission_fields(record_id, tin, email, nid_front_web_path, nid_bac
             """
         )
         db.session.execute(sql, params)
-
-    _update_record_status(record_id, STATUS_SUBMITTED)
+        db.session.commit()
 
 
 def _build_grouped_records(records):
     grouped = defaultdict(list)
     for row in records:
-        grouped[row.get("branch_name") or "Unknown Branch"].append(row)
+        grouped[row.get("network") or "Unknown Network"].append(row)
     return dict(grouped)
 
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @swift_remittance.route("/")
 @login_required
@@ -209,37 +306,8 @@ def admin_panel():
         LOG.exception("SWIFT admin panel load failed: %s", ex)
         flash("Unable to load SWIFT remittance data right now.", "danger")
         return render_template("swift_remittance/admin_panel.html", grouped_records={})
-print("SCHEMA:", current_app.config.get("SWIFT_SETTLEMENT_SCHEMA"))
 
-# @swift_remittance.route("/send-link/<int:record_id>", methods=["POST"])
-# @login_required
-# def send_secure_link(record_id):
-#     try:
-#         record = _fetch_record(record_id)
-#         if not record:
-#             flash("Record not found.", "warning")
-#             return redirect(url_for("swift_remittance.admin_panel"))
 
-#         token = _serializer().dumps({"record_id": record_id, "phone": record.get("phone_number", "")})
-#         verify_url = url_for("swift_remittance.verify_entry", token=token, _external=True)
-#         sms_message = (
-#             "AB Bank SWIFT Remittance: Complete your verification using this secure link "
-#             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
-#         )
-
-#         sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
-#         if sms_response and sms_response.get("status") == "SUCCESS":
-#             # Reuse existing SMS logging table.
-#             sms_response["trackingcode"] = str(record_id)
-#             app.utils.add_ssl_otp(sms_response, str(record_id))
-#             flash("Secure link sent successfully.", "success")
-#         else:
-#             flash("SMS could not be sent. Please try again.", "danger")
-#     except Exception as ex:
-#         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
-#         flash("Unexpected error while sending SMS.", "danger")
-
-#     return redirect(url_for("swift_remittance.admin_panel"))
 @swift_remittance.route("/send-link/<int:record_id>", methods=["POST"])
 @login_required
 def send_secure_link(record_id):
@@ -251,13 +319,17 @@ def send_secure_link(record_id):
 
         token = _serializer().dumps({
             "record_id": record_id,
-            "phone": record.get("phone_number", "")
+            "phone": record.get("mobile", ""),
         })
+
+        # Store url_reference in the table
+        _update_url_reference(record_id, token[:20])  # store first 20 chars as reference
+        _update_email_status(record_id, "sent")
 
         verify_url = url_for(
             "swift_remittance.verify_entry",
             token=token,
-            _external=True
+            _external=True,
         )
 
         sms_message = (
@@ -265,19 +337,31 @@ def send_secure_link(record_id):
             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
         )
 
-        # ✅ TEST MODE (no SMS)
-        print("\n====== SWIFT TEST LINK ======")
-        print(f"Phone: {record['phone_number']}")
-        print(f"Link: {verify_url}")
-        print("================================\n")
-
-        flash("Test mode: Link printed in console.", "success")
+        # Send SMS
+        mobile = record.get("mobile", "")
+        if mobile:
+            sms_response = app.utils.smsnewapi(mobile, sms_message)
+            if sms_response and sms_response.get("status") == "SUCCESS":
+                sms_response["trackingcode"] = str(record_id)
+                app.utils.add_ssl_otp(sms_response, str(record_id))
+                flash("Secure link sent successfully via SMS.", "success")
+            else:
+                # TEST MODE fallback
+                print("\n====== SWIFT TEST LINK ======")
+                print(f"Phone : {mobile}")
+                print(f"Link  : {verify_url}")
+                print("================================\n")
+                flash("SMS gateway unavailable – link printed in console (test mode).", "warning")
+        else:
+            print(f"\nSWIFT LINK (no mobile): {verify_url}\n")
+            flash("No mobile number on record – link printed in console.", "warning")
 
     except Exception as ex:
         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
-        flash("Unexpected error.", "danger")
+        flash("Unexpected error while sending SMS.", "danger")
 
     return redirect(url_for("swift_remittance.admin_panel"))
+
 
 @swift_remittance.route("/mark-verified/<int:record_id>", methods=["POST"])
 @login_required
@@ -314,54 +398,6 @@ def verify_entry():
         return redirect(url_for("main.index"))
 
 
-# @swift_remittance.route("/send-otp", methods=["POST"])
-# def send_otp():
-#     token = request.form.get("token", "").strip()
-#     if not token:
-#         flash("Invalid request.", "danger")
-#         return redirect(url_for("main.index"))
-
-#     try:
-#         payload = _serializer().loads(token, max_age=_token_max_age_seconds())
-#         record_id = int(payload.get("record_id"))
-#         record = _fetch_record(record_id)
-#         if not record:
-#             flash("Record not found.", "danger")
-#             return redirect(url_for("main.index"))
-
-#         otp = str(app.utils.otpgen())
-#         expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=_otp_expiry_seconds())
-#         otp_hash = sha256(otp.encode("utf-8")).hexdigest()
-
-#         session["swift_otp"] = {
-#             "record_id": record_id,
-#             "otp_hash": otp_hash,
-#             "expires_at": expires_at.isoformat(),
-#             "verified": False,
-#             "token": token,
-#             "tries": 0,
-#         }
-
-#         sms_message = (
-#             f"AB Bank SWIFT Remittance OTP: {otp}. "
-#             f"This OTP expires in {_otp_expiry_seconds() // 60} minutes."
-#         )
-#         sms_response = app.utils.smsnewapi(record["phone_number"], sms_message)
-#         if sms_response and sms_response.get("status") == "SUCCESS":
-#             sms_response["trackingcode"] = f"swift-otp-{record_id}"
-#             app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
-#             flash("OTP sent successfully.", "success")
-#         else:
-#             flash("Failed to send OTP SMS.", "danger")
-
-#         return redirect(url_for("swift_remittance.verify_entry", token=token))
-#     except SignatureExpired:
-#         flash("Verification link expired.", "danger")
-#         return redirect(url_for("main.index"))
-#     except Exception as ex:
-#         LOG.exception("SWIFT OTP send failed: %s", ex)
-#         flash("Unable to send OTP now.", "danger")
-#         return redirect(url_for("main.index"))
 @swift_remittance.route("/send-otp", methods=["POST"])
 def send_otp():
     token = request.form.get("token", "").strip()
@@ -390,13 +426,27 @@ def send_otp():
             "tries": 0,
         }
 
-        # ✅ TEST MODE (NO SMS)
-        print("\n====== SWIFT TEST OTP ======")
-        print(f"Phone: {record['phone_number']}")
-        print(f"OTP: {otp}")
-        print("================================\n")
+        # Update otp_status = 'sent'
+        _update_otp_status(record_id, "sent")
 
-        flash(f"Test OTP: {otp}", "success")
+        mobile = record.get("mobile", "")
+        sms_message = (
+            f"AB Bank SWIFT Remittance OTP: {otp}. "
+            f"Valid for {_otp_expiry_seconds() // 60} minutes. Do not share."
+        )
+
+        if mobile:
+            sms_response = app.utils.smsnewapi(mobile, sms_message)
+            if sms_response and sms_response.get("status") == "SUCCESS":
+                sms_response["trackingcode"] = f"swift-otp-{record_id}"
+                app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
+                flash("OTP sent successfully.", "success")
+            else:
+                print(f"\n====== SWIFT TEST OTP ======\nPhone: {mobile}\nOTP: {otp}\n============================\n")
+                flash(f"Test OTP (console): {otp}", "success")
+        else:
+            print(f"\nSWIFT OTP (no mobile): {otp}\n")
+            flash(f"Test OTP (no mobile): {otp}", "success")
 
         return redirect(url_for("swift_remittance.verify_entry", token=token))
 
@@ -407,6 +457,7 @@ def send_otp():
         LOG.exception("SWIFT OTP send failed: %s", ex)
         flash("Unable to send OTP now.", "danger")
         return redirect(url_for("main.index"))
+
 
 @swift_remittance.route("/verify-otp", methods=["POST"])
 def verify_otp():
@@ -429,6 +480,7 @@ def verify_otp():
         otp_session["tries"] = tries
         if tries > int(current_app.config.get("MAX_OTP_LIMIT", 3)):
             session.pop("swift_otp", None)
+            _update_otp_status(int(otp_session.get("record_id", 0)), "failed")
             flash("Maximum OTP attempts exceeded.", "danger")
             return redirect(url_for("swift_remittance.verify_entry", token=token))
 
@@ -438,9 +490,13 @@ def verify_otp():
             flash("OTP does not match. Please try again.", "danger")
             return redirect(url_for("swift_remittance.verify_entry", token=token))
 
+        # OTP verified
         otp_session["verified"] = True
         session["swift_otp"] = otp_session
+        _update_otp_status(int(otp_session["record_id"]), STATUS_VERIFIED)
+
         return redirect(url_for("swift_remittance.submission_form", token=token))
+
     except Exception as ex:
         LOG.exception("SWIFT OTP verify failed: %s", ex)
         flash("OTP verification failed.", "danger")
@@ -466,73 +522,65 @@ def submission_form():
 @swift_remittance.route("/submit", methods=["POST"])
 def submit_documents():
     token = request.form.get("token", "").strip()
-    tin_value = request.form.get("tin", "").strip()
     email_value = request.form.get("email", "").strip()
-    nid_front = request.files.get("nid_front")
-    nid_back = request.files.get("nid_back")
+    doc_file = request.files.get("doc_file")  # single document upload
 
     otp_session = session.get("swift_otp", {})
     if not otp_session or not otp_session.get("verified") or otp_session.get("token") != token:
         flash("Session expired. Please verify again.", "danger")
         return redirect(url_for("swift_remittance.verify_entry", token=token))
 
-    if not tin_value or not email_value:
-        flash("TIN and email are required.", "warning")
+    if not email_value:
+        flash("Email is required.", "warning")
         return redirect(url_for("swift_remittance.submission_form", token=token))
 
     if "@" not in email_value:
         flash("Please provide a valid email address.", "warning")
         return redirect(url_for("swift_remittance.submission_form", token=token))
 
-    if not nid_front or not nid_back:
-        flash("Both NID front and back images are required.", "warning")
-        return redirect(url_for("swift_remittance.submission_form", token=token))
-
-    if not _allowed_upload(nid_front.filename) or not _allowed_upload(nid_back.filename):
-        flash("Only JPG, JPEG, and PNG files are allowed.", "warning")
-        return redirect(url_for("swift_remittance.submission_form", token=token))
-
-    try:
-        upload_dir = _ensure_upload_dir()
-        max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH", 2 * 1024 * 1024))
-
-        nid_front.seek(0, os.SEEK_END)
-        front_size = nid_front.tell()
-        nid_front.seek(0)
-        nid_back.seek(0, os.SEEK_END)
-        back_size = nid_back.tell()
-        nid_back.seek(0)
-
-        if front_size > max_bytes or back_size > max_bytes:
-            flash("Each NID file must be within allowed size.", "warning")
+    doc_link = ""
+    if doc_file and doc_file.filename:
+        if not _allowed_upload(doc_file.filename):
+            flash("Only JPG, JPEG, and PNG files are allowed.", "warning")
             return redirect(url_for("swift_remittance.submission_form", token=token))
 
-        suffix_front = secure_filename(nid_front.filename)
-        suffix_back = secure_filename(nid_back.filename)
-        base = f"{otp_session['record_id']}_{uuid.uuid4().hex}"
-        front_name = f"{base}_front_{suffix_front}"
-        back_name = f"{base}_back_{suffix_back}"
-        front_abs = os.path.join(upload_dir, front_name)
-        back_abs = os.path.join(upload_dir, back_name)
-        nid_front.save(front_abs)
-        nid_back.save(back_abs)
+        try:
+            upload_dir = _ensure_upload_dir()
+            max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH", 2 * 1024 * 1024))
 
-        web_base = "/static/uploads/swift_remittance"
-        front_web_path = f"{web_base}/{front_name}"
-        back_web_path = f"{web_base}/{back_name}"
+            doc_file.seek(0, os.SEEK_END)
+            file_size = doc_file.tell()
+            doc_file.seek(0)
 
+            if file_size > max_bytes:
+                flash("File size exceeds the allowed limit.", "warning")
+                return redirect(url_for("swift_remittance.submission_form", token=token))
+
+            suffix = secure_filename(doc_file.filename)
+            base = f"{otp_session['record_id']}_{uuid.uuid4().hex}"
+            file_name = f"{base}_{suffix}"
+            abs_path = os.path.join(upload_dir, file_name)
+            doc_file.save(abs_path)
+
+            web_base = "/static/uploads/swift_remittance"
+            doc_link = f"{web_base}/{file_name}"
+
+        except Exception as ex:
+            LOG.exception("SWIFT document file save failed: %s", ex)
+            flash("Failed to save uploaded document.", "danger")
+            return redirect(url_for("swift_remittance.submission_form", token=token))
+
+    try:
         _update_submission_fields(
             int(otp_session["record_id"]),
-            tin_value,
             email_value,
-            front_web_path,
-            back_web_path,
+            doc_link[:10] if doc_link else "",  # doc_link_creator is varchar(10), store short ref
         )
         session.pop("swift_otp", None)
         flash("Documents submitted successfully.", "success")
         return redirect(url_for("swift_remittance.submission_success"))
     except Exception as ex:
-        LOG.exception("SWIFT document submission failed: %s", ex)
+        LOG.exception("SWIFT submission DB update failed: %s", ex)
         flash("Failed to save submission data.", "danger")
         return redirect(url_for("swift_remittance.submission_form", token=token))
 

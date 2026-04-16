@@ -23,20 +23,27 @@
 </div>
 {% endif %}
 
-{% for branch_name, records in grouped_records.items() %}
+{% for network_name, records in grouped_records.items() %}
 <div class="card border-light shadow-sm mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">{{ branch_name }} ({{ records|length }} records)</h2>
+        <h2 class="h5 mb-0">Network: {{ network_name }} ({{ records|length }} records)</h2>
     </div>
     <div class="table-responsive">
         <table class="table align-items-center table-flush mb-0">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Account Name</th>
-                    <th>Customer Name</th>
-                    <th>Phone Number</th>
-                    <th>Status</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Account</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Value Date</th>
+                    <th>Transaction Ref</th>
+                    <th>Mobile</th>
+                    <th>Email Status</th>
+                    <th>OTP Status</th>
+                    <th>Doc Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -44,24 +51,47 @@
                 {% for row in records %}
                 <tr>
                     <td>{{ row.id }}</td>
-                    <td>{{ row.account_name }}</td>
-                    <td>{{ row.customer_name }}</td>
-                    <td>{{ row.phone_number }}</td>
+                    <td>{{ row.sender }}</td>
+                    <td>{{ row.receiver }}</td>
+                    <td>{{ row.account }}</td>
+                    <td>{{ row.amount }}</td>
+                    <td>{{ row.currency_code }}</td>
+                    <td>{{ row.value_date }}</td>
+                    <td>{{ row.transaction_reference }}</td>
+                    <td>{{ row.mobile }}</td>
                     <td>
-                        {% if row.status == 'verified' %}
+                        {% if row.email_status == 'sent' %}
+                        <span class="badge bg-info text-dark">sent</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ row.email_status or 'pending' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.otp_status == 'verified' %}
                         <span class="badge bg-success">verified</span>
-                        {% elif row.status == 'submitted' %}
-                        <span class="badge bg-info">submitted</span>
+                        {% elif row.otp_status == 'sent' %}
+                        <span class="badge bg-info text-dark">sent</span>
+                        {% elif row.otp_status == 'failed' %}
+                        <span class="badge bg-danger">failed</span>
                         {% else %}
                         <span class="badge bg-warning text-dark">pending</span>
                         {% endif %}
                     </td>
-                    <td class="d-flex gap-1">
+                    <td>
+                        {% if row.doc_status == 'verified' %}
+                        <span class="badge bg-success">verified</span>
+                        {% elif row.doc_status == 'submitted' %}
+                        <span class="badge bg-info text-dark">submitted</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="d-flex gap-1 flex-wrap">
                         <form method="post" action="{{ url_for('swift_remittance.send_secure_link', record_id=row.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-secondary">Send SMS</button>
                         </form>
-                        {% if row.status == 'submitted' %}
+                        {% if row.doc_status == 'submitted' %}
                         <form method="post" action="{{ url_for('swift_remittance.mark_verified', record_id=row.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-success">Mark Verified</button>

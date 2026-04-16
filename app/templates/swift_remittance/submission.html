@@ -8,7 +8,33 @@
             <div class="col-12 col-lg-8">
                 <div class="bg-white shadow-soft border rounded border-light p-4 p-lg-5">
                     <h3 class="mb-3">Submit SWIFT Remittance Documents</h3>
-                    <p class="text-muted">Customer: {{ record.customer_name }} | Account: {{ record.account_name }}</p>
+
+                    <table class="table table-sm table-borderless mb-4">
+                        <tbody>
+                            <tr>
+                                <th>Sender</th>
+                                <td>{{ record.sender }}</td>
+                                <th>Receiver</th>
+                                <td>{{ record.receiver }}</td>
+                            </tr>
+                            <tr>
+                                <th>Account</th>
+                                <td>{{ record.account }}</td>
+                                <th>Mobile</th>
+                                <td>{{ record.mobile }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount</th>
+                                <td>{{ record.amount }} {{ record.currency_code }}</td>
+                                <th>Value Date</th>
+                                <td>{{ record.value_date }}</td>
+                            </tr>
+                            <tr>
+                                <th>Transaction Ref</th>
+                                <td colspan="3">{{ record.transaction_reference }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
                     {% for category, message in get_flashed_messages(with_categories=true) %}
                     <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
@@ -17,23 +43,20 @@
                     <form method="post" action="{{ url_for('swift_remittance.submit_documents') }}" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="token" value="{{ token }}">
+
                         <div class="mb-3">
-                            <label class="form-label">TIN</label>
-                            <input type="text" name="tin" class="form-control" required>
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" required
+                                   value="{{ record.email or '' }}">
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label">Upload Document (JPG/PNG, max 2MB)</label>
+                            <input type="file" name="doc_file" class="form-control" accept=".png,.jpg,.jpeg">
+                            <small class="text-muted">Optional – attach any supporting document.</small>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">NID Front Image</label>
-                            <input type="file" name="nid_front" class="form-control" accept=".png,.jpg,.jpeg" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">NID Back Image</label>
-                            <input type="file" name="nid_back" class="form-control" accept=".png,.jpg,.jpeg" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Documents</button>
+
+                        <button type="submit" class="btn btn-primary">Submit</button>
                     </form>
                 </div>
             </div>
