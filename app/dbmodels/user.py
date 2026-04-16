@@ -22,18 +22,25 @@ def get_ldap_connection():
     return server
 
 
+# UserRole = db.Table(
+#     'user_roles', db.Model.metadata,
+#     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+#     db.Column('role_id', db.Integer, db.ForeignKey('roles.id')),
+#     bind_key='otp_db_bind',
+#     schema='abbl'
+# )
+
 UserRole = db.Table(
-    'user_roles', db.Model.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('role_id', db.Integer, db.ForeignKey('roles.id')),
-    bind_key='otp_db_bind',
+    'user_roles',
+    db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('abbl.users.id')),
+    db.Column('role_id', db.Integer, db.ForeignKey('abbl.roles.id')),
     schema='abbl'
 )
-
-
 class User(db.Model,UserMixin):
         __tablename__ = 'users'
         #__table_args__ = {"schema":"abbl"}
+        __table_args__ = {'schema': 'abbl'}   # ✅ ADD THIS
         #__bind_key__ = 'otp_db_bind'
         id = db.Column(db.Integer, primary_key=True)
         is_active = db.Column('is_active', db.Boolean(), nullable=False, server_default='1')
@@ -59,6 +66,7 @@ class User(db.Model,UserMixin):
         # Define the relationship to Role via UserRoles
         #roles = db.relationship('Role', secondary='user_roles',primaryjoin="user_roles.user_id==users.id",secondaryjoin="user_roles.role_id==roles.id")
         roles = db.relationship('Role',secondary=UserRole)
+        
 
         def __init__(self,id, Username, password, Displayname,Office, Department,Branch,Phone,Email,Designation,is_active,user_role ):
             #self.id = id
@@ -255,7 +263,7 @@ user_manager = UserManager(app, db, User)
 # Define the Role data-model
 class Role(db.Model):
         __tablename__ = 'roles'
-        #__table_args__ = {"schema":"abbl"}
+        __table_args__ = {"schema":"abbl"}
         #__bind_key__ = 'otp_db_bind'
         
         id = db.Column(db.Integer, primary_key=True)
