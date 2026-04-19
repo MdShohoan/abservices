@@ -608,3 +608,104 @@ class REMITCUSTINFO(db.Model):
 				"address" : self.address
 				}
 
+class SwiftFormCSubmission(db.Model):
+    """
+    Tracks SWIFT remittance document uploads and Form-C submissions
+    """
+    __tablename__ = "swift_formc_submission"
+    __table_args__ = {"schema": "abbl"}
+    __bind_key__ = 'otp_db_bind'
+
+    id              = db.Column("id", db.BIGINT, primary_key=True)
+    swift_record_id = db.Column("swift_record_id", db.Integer, nullable=False)
+    
+    # Applicant info
+    applicant_name      = db.Column("applicant_name", db.String(255), nullable=True)
+    applicant_address   = db.Column("applicant_address", db.Text, nullable=True)
+    applicant_mobile    = db.Column("applicant_mobile", db.String(20), nullable=True)
+    applicant_email     = db.Column("applicant_email", db.String(150), nullable=True)
+    applicant_nationality = db.Column("applicant_nationality", db.String(50), nullable=True)
+
+    # Remittance info (from SWIFT)
+    remittance_amount   = db.Column("remittance_amount", db.Float, nullable=True)
+    remittance_currency = db.Column("remittance_currency", db.String(5), nullable=True)
+    remitter_name       = db.Column("remitter_name", db.String(255), nullable=True)
+    remitter_address    = db.Column("remitter_address", db.Text, nullable=True)
+    remitted_bank_name  = db.Column("remitted_bank_name", db.String(255), nullable=True)
+    remitted_bank_address = db.Column("remitted_bank_address", db.Text, nullable=True)
+    remittance_reference  = db.Column("remittance_reference", db.Text, nullable=True)
+    remittance_type       = db.Column("remittance_type", db.String(10), nullable=True)  # ICT or Others
+
+    # Purpose
+    purpose_of_remittance_id = db.Column("purpose_of_remittance_id", db.Integer, nullable=True)
+    purpose_specify          = db.Column("purpose_specify", db.Text, nullable=True)
+
+    # Document upload
+    doc_file_path   = db.Column("doc_file_path", db.String(500), nullable=True)
+    doc_upload_at   = db.Column("doc_upload_at", db.DateTime, nullable=True)
+
+    # Form-C link (links to remittance table)
+    formc_id        = db.Column("formc_id", db.BIGINT, nullable=True)  # FK to remittance.id
+    formc_submitted = db.Column("formc_submitted", db.Integer, default=0)  # 0=No, 1=Yes
+
+    # Status
+    # 0=pending, 1=doc_submitted, 2=formc_submitted, 3=verified
+    status      = db.Column("status", db.Integer, default=0, nullable=False)
+    created_at  = db.Column("created_at", db.DateTime, nullable=False)
+    updated_at  = db.Column("updated_at", db.DateTime, nullable=True)
+
+    def __init__(self, id, swift_record_id, applicant_name, applicant_address,
+                 applicant_mobile, applicant_email, applicant_nationality,
+                 remittance_amount, remittance_currency, remitter_name,
+                 remitter_address, remitted_bank_name, remitted_bank_address,
+                 remittance_reference, remittance_type, purpose_of_remittance_id,
+                 purpose_specify, doc_file_path, doc_upload_at, formc_id,
+                 formc_submitted, status, created_at, updated_at):
+
+        self.id                      = id
+        self.swift_record_id         = swift_record_id
+        self.applicant_name          = applicant_name
+        self.applicant_address       = applicant_address
+        self.applicant_mobile        = applicant_mobile
+        self.applicant_email         = applicant_email
+        self.applicant_nationality   = applicant_nationality
+        self.remittance_amount       = remittance_amount
+        self.remittance_currency     = remittance_currency
+        self.remitter_name           = remitter_name
+        self.remitter_address        = remitter_address
+        self.remitted_bank_name      = remitted_bank_name
+        self.remitted_bank_address   = remitted_bank_address
+        self.remittance_reference    = remittance_reference
+        self.remittance_type         = remittance_type
+        self.purpose_of_remittance_id = purpose_of_remittance_id
+        self.purpose_specify         = purpose_specify
+        self.doc_file_path           = doc_file_path
+        self.doc_upload_at           = doc_upload_at
+        self.formc_id                = formc_id
+        self.formc_submitted         = formc_submitted
+        self.status                  = status
+        self.created_at              = created_at
+        self.updated_at              = updated_at
+
+    def __repr__(self):
+        return f"<SwiftFormCSubmission {self.id}>"
+
+    @property
+    def serialize(self):
+        return {
+            "id"                      : self.id,
+            "swift_record_id"         : self.swift_record_id,
+            "applicant_name"          : self.applicant_name,
+            "applicant_mobile"        : self.applicant_mobile,
+            "applicant_email"         : self.applicant_email,
+            "remittance_amount"       : self.remittance_amount,
+            "remittance_currency"     : self.remittance_currency,
+            "remitter_name"           : self.remitter_name,
+            "remittance_type"         : self.remittance_type,
+            "doc_file_path"           : self.doc_file_path,
+            "formc_id"                : self.formc_id,
+            "formc_submitted"         : self.formc_submitted,
+            "status"                  : self.status,
+            "created_at"              : str(self.created_at),
+            "updated_at"              : str(self.updated_at)
+        }

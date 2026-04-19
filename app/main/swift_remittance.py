@@ -1,3 +1,6 @@
+
+# Add this import at the top with other imports
+
 import datetime
 import os
 import uuid
@@ -513,6 +516,20 @@ def verify_otp():
         return redirect(url_for("swift_remittance.verify_entry", token=token))
 
 
+# @swift_remittance.route("/submit")
+# def submission_form():
+#     token = request.args.get("token", "").strip()
+#     otp_session = session.get("swift_otp", {})
+#     if not otp_session or not otp_session.get("verified") or otp_session.get("token") != token:
+#         flash("Please complete OTP verification first.", "warning")
+#         return redirect(url_for("swift_remittance.verify_entry", token=token))
+
+#     record = _fetch_record(int(otp_session["record_id"]))
+#     if not record:
+#         flash("Record not found.", "danger")
+#         return redirect(url_for("main.index"))
+
+#     return render_template("swift_remittance/submission.html", token=token, record=record)
 @swift_remittance.route("/submit")
 def submission_form():
     token = request.args.get("token", "").strip()
@@ -526,75 +543,318 @@ def submission_form():
         flash("Record not found.", "danger")
         return redirect(url_for("main.index"))
 
-    return render_template("swift_remittance/submission.html", token=token, record=record)
+    # Check if amount > 20000 — pass flag to template
+    amount = float(record.get("amount") or 0)
+    show_formc = amount > 20000
 
+    return render_template(
+        "swift_remittance/submission.html",
+        token=token,
+        record=record,
+        show_formc=show_formc
+    )
 
+# @swift_remittance.route("/submit", methods=["POST"])
+# def submit_documents():
+#     token = request.form.get("token", "").strip()
+#     email_value = request.form.get("email", "").strip()
+#     doc_file = request.files.get("doc_file")  # single document upload
+
+#     otp_session = session.get("swift_otp", {})
+#     if not otp_session or not otp_session.get("verified") or otp_session.get("token") != token:
+#         flash("Session expired. Please verify again.", "danger")
+#         return redirect(url_for("swift_remittance.verify_entry", token=token))
+
+#     if not email_value:
+#         flash("Email is required.", "warning")
+#         return redirect(url_for("swift_remittance.submission_form", token=token))
+
+#     if "@" not in email_value:
+#         flash("Please provide a valid email address.", "warning")
+#         return redirect(url_for("swift_remittance.submission_form", token=token))
+
+#     doc_link = ""
+#     if doc_file and doc_file.filename:
+#         if not _allowed_upload(doc_file.filename):
+#             flash("Only JPG, JPEG, and PNG files are allowed.", "warning")
+#             return redirect(url_for("swift_remittance.submission_form", token=token))
+
+#         try:
+#             upload_dir = _ensure_upload_dir()
+#             max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH", 2 * 1024 * 1024))
+
+#             doc_file.seek(0, os.SEEK_END)
+#             file_size = doc_file.tell()
+#             doc_file.seek(0)
+
+#             if file_size > max_bytes:
+#                 flash("File size exceeds the allowed limit.", "warning")
+#                 return redirect(url_for("swift_remittance.submission_form", token=token))
+
+#             suffix = secure_filename(doc_file.filename)
+#             base = f"{otp_session['record_id']}_{uuid.uuid4().hex}"
+#             file_name = f"{base}_{suffix}"
+#             abs_path = os.path.join(upload_dir, file_name)
+#             doc_file.save(abs_path)
+
+#             web_base = "/static/uploads/swift_remittance"
+#             doc_link = f"{web_base}/{file_name}"
+
+#         except Exception as ex:
+#             LOG.exception("SWIFT document file save failed: %s", ex)
+#             flash("Failed to save uploaded document.", "danger")
+#             return redirect(url_for("swift_remittance.submission_form", token=token))
+
+#     try:
+#         _update_submission_fields(
+#             int(otp_session["record_id"]),
+#             email_value,
+#             doc_link[:10] if doc_link else "",  # doc_link_creator is varchar(10), store short ref
+#         )
+#         session.pop("swift_otp", None)
+#         flash("Documents submitted successfully.", "success")
+#         return redirect(url_for("swift_remittance.submission_success"))
+#     except Exception as ex:
+#         LOG.exception("SWIFT submission DB update failed: %s", ex)
+#         flash("Failed to save submission data.", "danger")
+#         return redirect(url_for("swift_remittance.submission_form", token=token))
+# Add import at top
+from app.models import SwiftFormCSubmission
+
+# Update submit_documents route
 @swift_remittance.route("/submit", methods=["POST"])
 def submit_documents():
+  
+    from app.models import SwiftFormCSubmission  # Import here
+    
     token = request.form.get("token", "").strip()
     email_value = request.form.get("email", "").strip()
-    doc_file = request.files.get("doc_file")  # single document upload
+    doc_file = request.files.get("doc_file")
 
     otp_session = session.get("swift_otp", {})
     if not otp_session or not otp_session.get("verified") or otp_session.get("token") != token:
         flash("Session expired. Please verify again.", "danger")
         return redirect(url_for("swift_remittance.verify_entry", token=token))
 
-    if not email_value:
-        flash("Email is required.", "warning")
-        return redirect(url_for("swift_remittance.submission_form", token=token))
-
-    if "@" not in email_value:
+    if not email_value or "@" not in email_value:
         flash("Please provide a valid email address.", "warning")
         return redirect(url_for("swift_remittance.submission_form", token=token))
 
     doc_link = ""
+    now = datetime.datetime.utcnow()
+
     if doc_file and doc_file.filename:
         if not _allowed_upload(doc_file.filename):
             flash("Only JPG, JPEG, and PNG files are allowed.", "warning")
             return redirect(url_for("swift_remittance.submission_form", token=token))
-
         try:
             upload_dir = _ensure_upload_dir()
             max_bytes = int(current_app.config.get("MAX_CONTENT_LENGTH", 2 * 1024 * 1024))
-
             doc_file.seek(0, os.SEEK_END)
             file_size = doc_file.tell()
             doc_file.seek(0)
-
             if file_size > max_bytes:
                 flash("File size exceeds the allowed limit.", "warning")
                 return redirect(url_for("swift_remittance.submission_form", token=token))
-
             suffix = secure_filename(doc_file.filename)
             base = f"{otp_session['record_id']}_{uuid.uuid4().hex}"
             file_name = f"{base}_{suffix}"
             abs_path = os.path.join(upload_dir, file_name)
             doc_file.save(abs_path)
-
-            web_base = "/static/uploads/swift_remittance"
-            doc_link = f"{web_base}/{file_name}"
-
+            doc_link = f"/static/uploads/swift_remittance/{file_name}"
         except Exception as ex:
-            LOG.exception("SWIFT document file save failed: %s", ex)
+            LOG.exception("File save failed: %s", ex)
             flash("Failed to save uploaded document.", "danger")
             return redirect(url_for("swift_remittance.submission_form", token=token))
 
     try:
+        record_id = int(otp_session["record_id"])
+        record = _fetch_record(record_id)
+        amount = float(record.get("amount") or 0)
+
+        # Update swift_details table
         _update_submission_fields(
-            int(otp_session["record_id"]),
+            record_id,
             email_value,
-            doc_link[:10] if doc_link else "",  # doc_link_creator is varchar(10), store short ref
+            doc_link[:10] if doc_link else ""
         )
+
+        # Save to swift_formc_submission table
+        dt = datetime.datetime.now()
+        submission_id = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
+        
+        current_app.logger.info(f"Creating submission record with ID: {submission_id}")
+
+        new_submission = SwiftFormCSubmission(
+            id=submission_id,
+            swift_record_id=record_id,
+            applicant_name=record.get("receiver", ""),
+            applicant_address=record.get("receiver_address", ""),
+            applicant_mobile=record.get("mobile", ""),
+            applicant_email=email_value,
+            applicant_nationality="bangladeshi",
+            remittance_amount=amount,
+            remittance_currency=record.get("currency_code", "USD"),
+            remitter_name=record.get("sender", ""),
+            remitter_address="",
+            remitted_bank_name="",
+            remitted_bank_address="",
+            remittance_reference=record.get("transaction_reference", ""),
+            remittance_type="Others",
+            purpose_of_remittance_id=None,
+            purpose_specify="",
+            doc_file_path=doc_link,
+            doc_upload_at=now if doc_link else None,
+            formc_id=None,
+            formc_submitted=0,
+            status=1,  # doc submitted
+            created_at=dt,
+            updated_at=dt
+        )
+        db.session.add(new_submission)
+        db.session.commit()
+        
+        current_app.logger.info(f"Submission record {submission_id} created successfully")
+
+        # Store submission_id in session for Form-C step
+        session["swift_formc_data"] = {
+            "record_id": record_id,
+            "submission_id": submission_id,
+            "applicant_name": record.get("receiver", ""),
+            "applicant_address": record.get("receiver_address", ""),
+            "applicant_mobile": record.get("mobile", ""),
+            "remittance_amount": amount,
+            "remittance_currency": record.get("currency_code", "USD"),
+            "remitter_name": record.get("sender", ""),
+            "token": token
+        }
+        
+        current_app.logger.info(f"Session data set with submission_id: {submission_id}")
+
         session.pop("swift_otp", None)
-        flash("Documents submitted successfully.", "success")
+
+        if amount > 20000:
+            flash("Document submitted. Please complete Form-C declaration.", "info")
+            return redirect(url_for("swift_remittance.swift_formc_form", token=token))
+
+        flash("Documents submitted successfully!", "success")
         return redirect(url_for("swift_remittance.submission_success"))
+
     except Exception as ex:
-        LOG.exception("SWIFT submission DB update failed: %s", ex)
-        flash("Failed to save submission data.", "danger")
+        db.session.rollback()
+        LOG.exception("Submission failed: %s", ex)
+        flash(f"Failed to save submission: {str(ex)}", "danger")
         return redirect(url_for("swift_remittance.submission_form", token=token))
+@swift_remittance.route("/formc-form")
+def swift_formc_form():
+    token = request.args.get("token", "").strip()
+    formc_data = session.get("swift_formc_data", {})
+    
+    if not formc_data or formc_data.get("token") != token:
+        flash("Session expired.", "danger")
+        return redirect(url_for("main.index"))
+    
+    from app.dbmodels.formc import Remittance_Purpose
+    purposes = Remittance_Purpose.query.all()
+    
+    return render_template(
+        "swift_remittance/swift_formc.html",
+        token=token,
+        formc_data=formc_data,
+        purposes=purposes,
+        applicant_name=formc_data.get("applicant_name", ""),
+        applicant_address=formc_data.get("applicant_address", ""),
+        applicant_mobile=formc_data.get("applicant_mobile", ""),
+    )
 
+@swift_remittance.route("/formc-submit", methods=["POST"])
+def swift_formc_submit():
+    from app.models import SwiftFormCSubmission
 
+    token = request.form.get("token", "").strip()
+    formc_data = session.get("swift_formc_data", {})
+
+    current_app.logger.info(f"Form-C Submit - Token: {token[:20] if token else 'None'}...")
+    current_app.logger.info(f"Session data exists: {bool(formc_data)}")
+
+    if not formc_data or formc_data.get("token") != token:
+        current_app.logger.warning("Session expired or token mismatch")
+        flash("Session expired. Please start over.", "danger")
+        return redirect(url_for("main.index"))
+
+    try:
+        # Get form data
+        remittance_type = request.form.get("remittance_type", "Others")
+        opt = request.form.get("opt", "0")
+        ictPurposeSpecify = request.form.get("ictPurposeSpecify", "").strip()
+        purposeSpecify = request.form.get("purposeSpecify", "").strip()
+        remitter_name = request.form.get("remitter_name", "").strip()
+        remitter_address = request.form.get("remitter_address", "").strip()
+        remitted_bank_name = request.form.get("remitted_bank_name", "").strip()
+        remitted_bank_address = request.form.get("remitted_bank_address", "").strip()
+        remittance_reference = request.form.get("remittance_reference", "").strip()
+        applicant_name = request.form.get("applicant_name", "").strip()
+        applicant_address = request.form.get("applicant_address", "").strip()
+        applicant_nationality = request.form.get("nationality", "bangladeshi")
+        applicant_mobile = request.form.get("applicant_mobile", "").strip()
+
+        # Determine purpose
+        purpose_of_remittance_id = int(opt) if (remittance_type == "ICT" and opt.isdigit()) else 0
+        if remittance_type != "ICT":
+            ictPurposeSpecify = purposeSpecify
+
+        dt = datetime.datetime.now()
+        formc_id = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
+
+        # Update swift_formc_submission table only (no separate remittance table needed)
+        submission_id = formc_data.get("submission_id")
+        current_app.logger.info(f"Updating submission_id: {submission_id}")
+        
+        if submission_id:
+            submission = SwiftFormCSubmission.query.filter_by(id=submission_id).first()
+            if submission:
+                current_app.logger.info(f"Found submission record {submission_id}, updating with formc_id: {formc_id}")
+                
+                # Update all Form-C fields
+                submission.formc_id = formc_id
+                submission.formc_submitted = 1
+                submission.remitter_name = remitter_name
+                submission.remitter_address = remitter_address
+                submission.remitted_bank_name = remitted_bank_name
+                submission.remitted_bank_address = remitted_bank_address
+                submission.remittance_reference = remittance_reference
+                submission.remittance_type = remittance_type
+                submission.purpose_of_remittance_id = purpose_of_remittance_id
+                submission.purpose_specify = ictPurposeSpecify
+                submission.applicant_name = applicant_name
+                submission.applicant_address = applicant_address
+                submission.applicant_nationality = applicant_nationality
+                submission.status = 2  # formc submitted
+                submission.updated_at = dt
+                
+                db.session.commit()
+                current_app.logger.info(f"Successfully updated submission {submission_id} with formc_id {formc_id}")
+            else:
+                current_app.logger.error(f"Submission record {submission_id} not found!")
+                flash("Error: Submission record not found.", "danger")
+                return redirect(url_for("swift_remittance.swift_formc_form", token=token))
+        else:
+            current_app.logger.error("No submission_id in session data!")
+            flash("Error: No submission ID found in session.", "danger")
+            return redirect(url_for("swift_remittance.swift_formc_form", token=token))
+
+        # Clear session data
+        session.pop("swift_formc_data", None)
+        session.pop("swift_otp", None)
+
+        flash(f"Form-C submitted successfully! Tracking ID: {formc_id}", "success")
+        return redirect(url_for("swift_remittance.submission_success"))
+
+    except Exception as ex:
+        db.session.rollback()
+        LOG.exception("Form-C submit failed: %s", ex)
+        flash(f"Failed to submit Form-C: {str(ex)}", "danger")
+        return redirect(url_for("swift_remittance.swift_formc_form", token=token))
 @swift_remittance.route("/submission-success")
 def submission_success():
     return render_template("swift_remittance/success.html")

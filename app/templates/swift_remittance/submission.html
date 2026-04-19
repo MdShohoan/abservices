@@ -55,7 +55,13 @@
                             <input type="file" name="doc_file" class="form-control" accept=".png,.jpg,.jpeg">
                             <small class="text-muted">Optional – attach any supporting document.</small>
                         </div>
-
+                        {% if show_formc %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Note:</strong> Since your remittance amount exceeds USD 20,000,
+                            you will be required to complete a <strong>Form-C declaration</strong>
+                            after submitting your documents.
+                        </div>
+                        {% endif %}
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </form>
                 </div>
