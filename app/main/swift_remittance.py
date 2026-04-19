@@ -336,25 +336,31 @@ def send_secure_link(record_id):
             "AB Bank SWIFT Remittance: Complete your verification using this secure link "
             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
         )
+        # ✅ TEST MODE (no SMS)
+        print("\n====== SWIFT TEST LINK ======")
+        print(f"Phone: {record['phone_number']}")
+        print(f"Link: {verify_url}")
+        print("================================\n")
 
+        flash("Test mode: Link printed in console.", "success")
         # Send SMS
-        mobile = record.get("mobile", "")
-        if mobile:
-            sms_response = app.utils.smsnewapi(mobile, sms_message)
-            if sms_response and sms_response.get("status") == "SUCCESS":
-                sms_response["trackingcode"] = str(record_id)
-                app.utils.add_ssl_otp(sms_response, str(record_id))
-                flash("Secure link sent successfully via SMS.", "success")
-            else:
-                # TEST MODE fallback
-                print("\n====== SWIFT TEST LINK ======")
-                print(f"Phone : {mobile}")
-                print(f"Link  : {verify_url}")
-                print("================================\n")
-                flash("SMS gateway unavailable – link printed in console (test mode).", "warning")
-        else:
-            print(f"\nSWIFT LINK (no mobile): {verify_url}\n")
-            flash("No mobile number on record – link printed in console.", "warning")
+        # mobile = record.get("mobile", "")
+        # if mobile:
+        #     sms_response = app.utils.smsnewapi(mobile, sms_message)
+        #     if sms_response and sms_response.get("status") == "SUCCESS":
+        #         sms_response["trackingcode"] = str(record_id)
+        #         app.utils.add_ssl_otp(sms_response, str(record_id))
+        #         flash("Secure link sent successfully via SMS.", "success")
+        #     else:
+        #         # TEST MODE fallback
+        #         print("\n====== SWIFT TEST LINK ======")
+        #         print(f"Phone : {mobile}")
+        #         print(f"Link  : {verify_url}")
+        #         print("================================\n")
+        #         flash("SMS gateway unavailable – link printed in console (test mode).", "warning")
+        # else:
+        #     print(f"\nSWIFT LINK (no mobile): {verify_url}\n")
+        #     flash("No mobile number on record – link printed in console.", "warning")
 
     except Exception as ex:
         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
@@ -425,28 +431,32 @@ def send_otp():
             "token": token,
             "tries": 0,
         }
-
+        # ✅ TEST MODE (NO SMS)
+        print("\n====== SWIFT TEST OTP ======")
+        print(f"Phone: {record['phone_number']}")
+        print(f"OTP: {otp}")
+        print("================================\n")
         # Update otp_status = 'sent'
-        _update_otp_status(record_id, "sent")
+        # _update_otp_status(record_id, "sent")
 
-        mobile = record.get("mobile", "")
-        sms_message = (
-            f"AB Bank SWIFT Remittance OTP: {otp}. "
-            f"Valid for {_otp_expiry_seconds() // 60} minutes. Do not share."
-        )
+        # mobile = record.get("mobile", "")
+        # sms_message = (
+        #     f"AB Bank SWIFT Remittance OTP: {otp}. "
+        #     f"Valid for {_otp_expiry_seconds() // 60} minutes. Do not share."
+        # )
 
-        if mobile:
-            sms_response = app.utils.smsnewapi(mobile, sms_message)
-            if sms_response and sms_response.get("status") == "SUCCESS":
-                sms_response["trackingcode"] = f"swift-otp-{record_id}"
-                app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
-                flash("OTP sent successfully.", "success")
-            else:
-                print(f"\n====== SWIFT TEST OTP ======\nPhone: {mobile}\nOTP: {otp}\n============================\n")
-                flash(f"Test OTP (console): {otp}", "success")
-        else:
-            print(f"\nSWIFT OTP (no mobile): {otp}\n")
-            flash(f"Test OTP (no mobile): {otp}", "success")
+        # if mobile:
+        #     sms_response = app.utils.smsnewapi(mobile, sms_message)
+        #     if sms_response and sms_response.get("status") == "SUCCESS":
+        #         sms_response["trackingcode"] = f"swift-otp-{record_id}"
+        #         app.utils.add_ssl_otp(sms_response, f"swift-otp-{record_id}")
+        #         flash("OTP sent successfully.", "success")
+        #     else:
+        #         print(f"\n====== SWIFT TEST OTP ======\nPhone: {mobile}\nOTP: {otp}\n============================\n")
+        #         flash(f"Test OTP (console): {otp}", "success")
+        # else:
+        #     print(f"\nSWIFT OTP (no mobile): {otp}\n")
+        #     flash(f"Test OTP (no mobile): {otp}", "success")
 
         return redirect(url_for("swift_remittance.verify_entry", token=token))
 
