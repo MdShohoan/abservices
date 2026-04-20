@@ -20,7 +20,8 @@ class DevelopmentConfig(Config):
     #BASE_URL = "https://uatgw.abbl.com:9443/"
     #BASE_URL = "http://192.168.19.72:9090/"
     #BASE_URL = "http://192.168.133.131:8087/"
-    BASE_URL = "https://services.abbl.com/"
+    # BASE_URL = "https://services.abbl.com/"
+    BASE_URL = "http://127.0.0.1:5000/"
     #SSL_CER_FILE = directory +'/cer/bkashuat_abbl_org.pem'
     #SQLALCHEMY_POOL_SIZE = 20   
     #SQLALCHEMY_MAX_OVERFLOW = 0

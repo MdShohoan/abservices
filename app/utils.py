@@ -333,7 +333,8 @@ def add_ssl_otp (response,reqid=''):
 
         
         #print ("DB SMS INFO EXECUTED : ")
-        code = response.get("code")
+        # code = response.get("code")
+        code = response.get("code") or response.get("ssl_reference_no") or 'DEV'
 
         #print ("Code {code}")
         #print (code)
@@ -347,7 +348,8 @@ def add_ssl_otp (response,reqid=''):
         else : 
             status = 0
         
-        sms_send_time = response.get("sms_send_time")
+        # sms_send_time = response.get("sms_send_time")
+        sms_send_time = datetime.datetime.now()
         reference_no =response.get("reference_no")
         return_url  =response.get("callback_url")
         if return_url:
@@ -391,7 +393,8 @@ def send_otp (account_no,customer_data,request_type) :
     requestid                = customer_data.get('requestid')
     customer_name            = customer_data.get('customerName')
     mobile                   = customer_data.get('mobile')
-
+    
+    email = customer_data.get('email')
     if not mobile and email is None:
         return False,ssl_otp_response 
     
@@ -445,50 +448,81 @@ def send_otp (account_no,customer_data,request_type) :
         #ssl_otp_response=app.utils.send_sms_by_ssl(mobile,otp_msg)
         #print ('before sms api call...')
         #print (f'mobile : {mobile}')
-        
         if mobile:
-            #print (f'mobile : {mobile}')
-            ssl_otp_response=smsnewapi(mobile,otp_msg)
-            #print ('after sms api call...')
-            #print (ssl_otp_response)
-            if ssl_otp_response.get('status') == 'SUCCESS':
-                add_ssl_otp(ssl_otp_response,requestid)
-                view_otp_send_date            = now.strftime("%d-%m-%Y %H:%M:%S")
-                #print (view_otp_send_date)
-                #return render_template('otp.html', otp_send_date = view_otp_send_date,customer_mask_mobile=masked_mobile,mobile=mobile,customer_name=customer_name,customer_account_number=masked_account_number,csrf=csrf,message=otp_msg,trackingcode=requestid)
-                ssl_otp_response.update({'view_otp_send_date': view_otp_send_date,
-                                     'customer_mask_mobile':masked_mobile,
-                                     'mobile' : mobile, 
-                                     'customer_account_number' :masked_account_number,
-                                     'customer_name' : customer_name,
-                                     'statement_path':''    
-                                     })
+            # ---- DEV MODE: skip SMS, return success directly ----
+            print(f"====== DEV MODE OTP ======")
+            print(f"Mobile : {mobile}")
+            print(f"OTP    : {otp_code}")
+            print(f"==========================")
+            
+            view_otp_send_date = now.strftime("%Y-%m-%d %H:%M:%S")
+            ssl_otp_response = {
+                'status'                : 'SUCCESS',
+                'result'                : 'dev mode',
+                'phone'                 : mobile,
+                'sms_type'              : 'EN',
+                'message'               : otp_msg,
+                'reference_no'          : 'DEV123',
+                'ssl_reference_no'      : 'DEV123',
+                'sms_send_time'         : datetime.datetime.now(),  # <-- datetime object not string
+                'ssl_reply_message'     : 'Verify',
+                'trackingcode'          : requestid,
+                'datetime'              : now.strftime("%Y-%m-%d %H:%M:%S"),  # <-- fix format
+                'callback_url'          : '',
+                'view_otp_send_date'    : now.strftime("%d-%m-%Y %H:%M:%S"),  # display format is ok
+                'customer_mask_mobile'  : masked_mobile,
+                'customer_account_number': masked_account_number,
+                'customer_name'         : customer_name,
+                'statement_path'        : ''
+            }
+            add_ssl_otp(ssl_otp_response, requestid)
+            return True, ssl_otp_response        
+        # if mobile:
+        #     #print (f'mobile : {mobile}')
+        #     ssl_otp_response=smsnewapi(mobile,otp_msg)
+        #     #print ('after sms api call...')
+        #     #print (ssl_otp_response)
+        #     if ssl_otp_response.get('status') == 'SUCCESS':
+        #         add_ssl_otp(ssl_otp_response,requestid)
+        #         view_otp_send_date            = now.strftime("%d-%m-%Y %H:%M:%S")
+        #         #print (view_otp_send_date)
+        #         #return render_template('otp.html', otp_send_date = view_otp_send_date,customer_mask_mobile=masked_mobile,mobile=mobile,customer_name=customer_name,customer_account_number=masked_account_number,csrf=csrf,message=otp_msg,trackingcode=requestid)
+        #         ssl_otp_response.update({'view_otp_send_date': view_otp_send_date,
+        #                              'customer_mask_mobile':masked_mobile,
+        #                              'mobile' : mobile, 
+        #                              'customer_account_number' :masked_account_number,
+        #                              'customer_name' : customer_name,
+        #                              'statement_path':''    
+        #                              })
                               
-                #print (ssl_otp_response)
-                return True,ssl_otp_response
-            else : 
-                return False,ssl_otp_response    
+        #         #print (ssl_otp_response)
+        #         return True,ssl_otp_response
+        #     else : 
+        #         return False,ssl_otp_response    
         else:
             
             if email is not None and email !='no-reply@abbl.com':
                 url = ''
                 send_email_alert(mobile,otp_msg)
                 ssl_otp_response = {
-                        'status': 'success',
-                        'result': 'sms sent',
-                        'code' : otp_code,
-                        'phone': '',
-                        'phone': email,
-                        'message': 'An otp send to Email',
-                        'reference_no': 'None',
-                        'ssl_reference_no': 'None',
-                        'sms_send_time' :datetime.datetime.now().strftime('%Y-%m-%d %I:%M%p'),
-                        'ssl_reply_message' : 'Verify',
-                        'trackingcode' : requestid,
-                        'datetime': datetime.datetime.now().strftime('%Y-%m-%d %I:%M%p'),
-                        'callback_url' :url
-                        }
-                return True,ssl_otp_response
+                    'status'                : 'SUCCESS',
+                    'result'                : 'dev mode',
+                    'phone'                 : mobile,
+                    'sms_type'              : 'EN',
+                    'message'               : otp_msg,
+                    'reference_no'          : 'DEV123',
+                    'ssl_reference_no'      : 'DEV123',
+                    'sms_send_time'         : datetime.datetime.now(),  # <-- datetime object not string
+                    'ssl_reply_message'     : 'Verify',
+                    'trackingcode'          : requestid,
+                    'datetime'              : now.strftime("%Y-%m-%d %H:%M:%S"),  # <-- fix format
+                    'callback_url'          : '',
+                    'view_otp_send_date'    : now.strftime("%d-%m-%Y %H:%M:%S"),  # display format is ok
+                    'customer_mask_mobile'  : masked_mobile,
+                    'customer_account_number': masked_account_number,
+                    'customer_name'         : customer_name,
+                    'statement_path'        : ''
+                }
 
             
             
@@ -592,13 +626,27 @@ def  do_account_verifiy (requestid, account_no,csrf='') :
                         #LOG.info('Account: %s: , Request Data : 1.session token : %s  ', custno, sessiontoken)
                         #cusresult = transactionClient.service.accountStatus(**request_data)
                         request_data = { 
-                            'sessionToken' : sessiontoken,
-                            'custno' : custno
+                            'sessionToken': sessiontoken,
+                            'custno': custno
                         }
-                    
-                        LOG.info('Account: %s: , Request Data : 1.session token : %s  ', custno, sessiontoken)
-                        print ('customer details api call : ')
+
+                        # ✅ ADD THESE DEBUG LINES
+                        print("===== DEBUG customerDetails =====")
+                        print("sessionToken:", sessiontoken)
+                        print("custno:", custno)
+                        print("Request Data:", request_data)
+
+                        # OPTIONAL: check method signature
+                        print("Method signature:", transactionClient.service.customerDetails)
+
+                        print('customer details api call : ')
+
                         cusresult = transactionClient.service.customerDetails(**request_data)
+
+                        # ✅ PRINT FULL RESPONSE
+                        import json
+                        print("Full Response:", json.dumps(cusresult, indent=2, default=str))
+                        print("================================")
                         LOG.info('Account: %s: , Cust details Result Data : : %s  ', custno, cusresult)
                         print ('customer details api result  : ')
                         print (cusresult)
