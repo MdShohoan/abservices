@@ -89,8 +89,8 @@ class DevelopmentConfig(Config):
     CBS_SYSTEM = 'ABBDTSTEQ'
     #CBS_USERNAME = 'IBNWUSR'
     #CBS_PASSWORD = 'IBNWUSR'
-    CBS_USERNAME = 'IBEQUSR'
-    CBS_PASSWORD = 'IBEQUSR'
+    CBS_USERNAME = 'REMEQUSR'
+    CBS_PASSWORD = 'rem@123'
     CBS_UNIT = 'DEV'
     '''	
     EQCONNECTWSDL = 'http://192.168.112.154:9087/abeqws/services/EQConnect?wsdl'
@@ -100,8 +100,8 @@ class DevelopmentConfig(Config):
     CBS_SYSTEM = 'ABBDEQ'
     #CBS_USERNAME = 'IBNWUSR'
     #CBS_PASSWORD = 'IBNWUSR'
-    CBS_USERNAME = 'IBKYCUSR'
-    CBS_PASSWORD = 'IBKYCUSR'
+    CBS_USERNAME = 'REMEQUSR'
+    CBS_PASSWORD = 'rem@123'
     CBS_UNIT = 'KAP'
     
     

@@ -152,6 +152,34 @@ def _fetch_records():
         item.setdefault("branch_name", item.get("network", "Unknown"))
         item.setdefault("status", item.get("doc_status", STATUS_PENDING))
         normalized.append(item)
+
+    # Attach latest customer submission (doc + formc) info for admin list display.
+    try:
+        record_ids = [r.get("id") for r in normalized if r.get("id") is not None]
+        if record_ids:
+            submissions = (
+                SwiftFormCSubmission.query.filter(SwiftFormCSubmission.swift_record_id.in_(record_ids))
+                .order_by(SwiftFormCSubmission.swift_record_id.asc(), SwiftFormCSubmission.created_at.desc())
+                .all()
+            )
+            latest_by_record = {}
+            for s in submissions:
+                # pick first (latest) per swift_record_id due to ordering
+                if s.swift_record_id not in latest_by_record:
+                    latest_by_record[s.swift_record_id] = s
+
+            for item in normalized:
+                s = latest_by_record.get(item.get("id"))
+                if not s:
+                    continue
+                item["submission_id"] = s.id
+                item["formc_id"] = s.formc_id
+                item["formc_submitted"] = int(s.formc_submitted or 0)
+                item["doc_file_path"] = s.doc_file_path
+                item["applicant_email"] = s.applicant_email
+    except Exception as ex:
+        # Don't break the admin panel if submission join fails
+        LOG.exception("SWIFT admin panel submission join failed: %s", ex)
     return normalized
 
 
@@ -318,6 +346,19 @@ def send_secure_link(record_id):
         record = _fetch_record(record_id)
         if not record:
             flash("Record not found.", "warning")
+            return redirect(url_for("swift_remittance.admin_panel"))
+
+        # If customer already submitted docs (or completed Form-C), don't send link again
+        latest_submission = (
+            SwiftFormCSubmission.query.filter_by(swift_record_id=record_id)
+            .order_by(SwiftFormCSubmission.created_at.desc())
+            .first()
+        )
+        if record.get("doc_status") in {STATUS_SUBMITTED, STATUS_VERIFIED}:
+            flash("Customer already submitted documents. SMS link is not required.", "info")
+            return redirect(url_for("swift_remittance.admin_panel"))
+        if latest_submission and int(latest_submission.formc_submitted or 0) == 1:
+            flash("Customer already submitted Form-C. SMS link is not required.", "info")
             return redirect(url_for("swift_remittance.admin_panel"))
 
         token = _serializer().dumps({
@@ -543,9 +584,9 @@ def submission_form():
         flash("Record not found.", "danger")
         return redirect(url_for("main.index"))
 
-    # Check if amount > 20000 — pass flag to template
+    # Check if amount >= 20000 — pass flag to template
     amount = float(record.get("amount") or 0)
-    show_formc = amount > 20000
+    show_formc = amount >= 20000
 
     return render_template(
         "swift_remittance/submission.html",
@@ -733,7 +774,7 @@ def submit_documents():
 
         session.pop("swift_otp", None)
 
-        if amount > 20000:
+        if amount >= 20000:
             flash("Document submitted. Please complete Form-C declaration.", "info")
             return redirect(url_for("swift_remittance.swift_formc_form", token=token))
 
@@ -758,13 +799,40 @@ def swift_formc_form():
     purposes = Remittance_Purpose.query.all()
     
     return render_template(
-        "swift_remittance/swift_formc.html",
+        # Reuse the existing Form-C template
+        "formc/index.html",
         token=token,
         formc_data=formc_data,
         purposes=purposes,
         applicant_name=formc_data.get("applicant_name", ""),
         applicant_address=formc_data.get("applicant_address", ""),
         applicant_mobile=formc_data.get("applicant_mobile", ""),
+        readonly_applicant_address=False,
+        form_action=url_for("swift_remittance.swift_formc_submit"),
+    )
+
+
+@swift_remittance.route("/details/<int:record_id>")
+@login_required
+def record_details(record_id):
+    """
+    Admin view: show SWIFT record + document upload + Form-C submission (if any).
+    """
+    record = _fetch_record(record_id)
+    if not record:
+        flash("Record not found.", "warning")
+        return redirect(url_for("swift_remittance.admin_panel"))
+
+    submission = (
+        SwiftFormCSubmission.query.filter_by(swift_record_id=record_id)
+        .order_by(SwiftFormCSubmission.created_at.desc())
+        .first()
+    )
+
+    return render_template(
+        "swift_remittance/details.html",
+        record=record,
+        submission=submission,
     )
 
 @swift_remittance.route("/formc-submit", methods=["POST"])

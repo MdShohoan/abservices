@@ -54,16 +54,27 @@
           </div>
   
           
-          <form  action="/formc/home/{{trackingcode}}/{{request_type}}" method="POST">
+          {# 
+            Reusable Form-C template.
+            - Default (existing /formc flow): posts to /formc/home/<trackingcode>/<request_type>
+            - SWIFT flow can pass: form_action + token + prefill values
+          #}
+          <form action="{{ form_action or ('/formc/home/' ~ trackingcode ~ '/' ~ request_type) }}" method="POST">
+            <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}" />
+            {% if token %}
+            <input type="hidden" name="token" value="{{ token }}" />
+            {% endif %}
             <div class="formbold-form-title">
               <h2>
                
                 <div id="frmType">
                   <div class="text-center">
-                    <input type="radio" name="remittance_type" id="frm_type" value="Others" checked  />
+                    <input type="radio" name="remittance_type" id="frm_type_others" value="Others"
+                      {% if (formc_data and formc_data.remittance_type == 'ICT') %}{% else %}checked{% endif %} />
                     <label id="labelstyle">Form-C</label>
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <input type="radio" name="remittance_type" id="frm_type" value="ICT" />
+                    <input type="radio" name="remittance_type" id="frm_type_ict" value="ICT"
+                      {% if (formc_data and formc_data.remittance_type == 'ICT') %}checked{% endif %} />
                     <label id="labelstyle">Form-C (ICT)</label>
                   </div>
                 </div>
@@ -84,6 +95,7 @@
                   type="text"
                   class="formbold-form-input"
                   name="remitter_name"
+                  value="{{ (formc_data.remitter_name if formc_data else '') }}"
                   required
                 />
               </div>
@@ -110,39 +122,49 @@
                   type="text"
                   class="formbold-form-input"
                   name="remitter_name"
+                  value="{{ (formc_data.remitter_name if formc_data else '') }}"
                   required
                 />
               </div>
   
              
             </div>
+            <div class="formbold-mb-3 required">
+              <label class="formbold-form-label"> Remitter Address </label>
+              <input type="text" name="remitter_address" class="formbold-form-input" required
+                value="{{ (formc_data.remitter_address if formc_data else '') }}" />
+            </div>
             <div class="formbold-input-flex">
               <div class="formbold-mb-3 required">
                 <label class="formbold-form-label "> Remittance Amount </label>
-                <input type="number" name="remittance_amount" class="formbold-form-input" required/>
+                <input type="number" name="remittance_amount" class="formbold-form-input" required
+                  value="{{ (formc_data.remittance_amount if formc_data else '') }}"/>
               </div>
               <div>
                 <label class="formbold-form-label">Remittance Currency</label>
                 <select id="currency" name="remittance_currency">
-                  <option value="BDT">BDT</option>
-                  <option value="USD">USD</option>
+                  <option value="BDT" {% if formc_data and formc_data.remittance_currency == 'BDT' %}selected{% endif %}>BDT</option>
+                  <option value="USD" {% if formc_data and formc_data.remittance_currency == 'USD' %}selected{% endif %}>USD</option>
                 </select>
               </div>
             </div>
   
-            <!--<div class="formbold-mb-3 required">
+            <div class="formbold-mb-3 required">
               <label class="formbold-form-label"> Remitted Bank Name </label>
-              <input type="text" name="remitted_bank_name" class="formbold-form-input" required />
-            </div>-->
-  
-            <!--<div class="formbold-mb-3 required">
-              <label class="formbold-form-label "> Remitted Bank Address </label>
-              <input type="text" name="remitted_bank_address" class="formbold-form-input" required />
+              <input type="text" name="remitted_bank_name" class="formbold-form-input" required
+                value="{{ (formc_data.remitted_bank_name if formc_data else '') }}" />
             </div>
-            <div class="formbold-mb-3 required" id="remittance_reference_ict">
+  
+            <div class="formbold-mb-3">
+              <label class="formbold-form-label"> Remitted Bank Address </label>
+              <input type="text" name="remitted_bank_address" class="formbold-form-input"
+                value="{{ (formc_data.remitted_bank_address if formc_data else '') }}" />
+            </div>
+            <div class="formbold-mb-3">
               <label class="formbold-form-label"> Remittance Reference  (contract/invoice/electronic communication etc.) </label>
-              <input type="text" name="remittance_reference" class="formbold-form-input" required />
-            </div>-->
+              <input type="text" name="remittance_reference" class="formbold-form-input"
+                value="{{ (formc_data.remittance_reference if formc_data else '') }}" />
+            </div>
             
             <div class="formbold-mb-3 required" >
               <label class="details-title">Remittance Purpose</label>
@@ -173,7 +195,8 @@
             <div id="others" class="othersopt">
               <div class="formbold-mb-3 required">
                 <label class="formbold-form-label"> Remittance Purpose </label>
-                <input type="text" name="purposeSpecify" class="formbold-form-input" id="otherPurposeSpecify" />
+                <input type="text" name="purposeSpecify" class="formbold-form-input" id="otherPurposeSpecify"
+                  value="{{ (formc_data.purpose_specify if (formc_data and formc_data.remittance_type != 'ICT') else '') }}" />
               </div>
               <br />
             </div>
@@ -200,7 +223,8 @@
             <div class="remitter">
               <div class="formbold-mb-3 required">
                 <label class="formbold-form-label"> Applicant Address </label>
-                <input type="text" name="applicant_address" class="formbold-form-input" value="{{applicant_address}}" required readonly />
+                <input type="text" name="applicant_address" class="formbold-form-input" value="{{applicant_address}}"
+                  required {% if readonly_applicant_address is not defined or readonly_applicant_address %}readonly{% endif %} />
               </div>
             </div>
             <div class="remitter">
@@ -240,12 +264,6 @@
             </div>
   
             <!---------------------------------------------------------------------------->
-            <input
-            type="hidden"
-            id="csrf_token"
-            name="csrf_token"
-            value="{{csrf_token()}}"
-          />
             <button class="formbold-btn">Submit</button>
           </div>  
           </form>
@@ -254,7 +272,51 @@
       </div>
      
       <script>
-      
+      document.addEventListener('DOMContentLoaded', function () {
+        // Set application date if field exists
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+        }
+
+        const typeRadios = document.querySelectorAll('input[name="remittance_type"]');
+        const ictDiv = document.getElementById('ict');
+        const othersDiv = document.getElementById('others');
+
+        function togglePurpose() {
+          const selected = document.querySelector('input[name="remittance_type"]:checked');
+          const isICT = selected && selected.value === 'ICT';
+          if (ictDiv) ictDiv.style.display = isICT ? 'block' : 'none';
+          if (othersDiv) othersDiv.style.display = isICT ? 'none' : 'block';
+        }
+
+        if (typeRadios.length) {
+          typeRadios.forEach(function (r) {
+            r.addEventListener('change', togglePurpose);
+          });
+        }
+        togglePurpose();
+
+        const specifyBox = document.querySelector('.ictPurposeSpecifyClass');
+        const optRadios = document.querySelectorAll('input[name="opt"]');
+
+        function toggleSpecify() {
+          if (!specifyBox) return;
+          const selectedOpt = document.querySelector('input[name="opt"]:checked');
+          specifyBox.style.display = (selectedOpt && selectedOpt.value === '0') ? 'block' : 'none';
+        }
+
+        if (optRadios.length) {
+          optRadios.forEach(function (r) {
+            r.addEventListener('change', toggleSpecify);
+          });
+        }
+        toggleSpecify();
+      });
       </script>
      
      {% endblock content %}

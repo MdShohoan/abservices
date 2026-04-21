@@ -37,13 +37,8 @@
                     <th>Receiver</th>
                     <th>Account</th>
                     <th>Amount</th>
-                    <th>Currency</th>
-                    <th>Value Date</th>
-                    <th>Transaction Ref</th>
                     <th>Mobile</th>
-                    <th>Email Status</th>
-                    <th>OTP Status</th>
-                    <th>Doc Status</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -54,43 +49,55 @@
                     <td>{{ row.sender }}</td>
                     <td>{{ row.receiver }}</td>
                     <td>{{ row.account }}</td>
-                    <td>{{ row.amount }}</td>
-                    <td>{{ row.currency_code }}</td>
-                    <td>{{ row.value_date }}</td>
-                    <td>{{ row.transaction_reference }}</td>
+                    <td>{{ row.amount }} {{ row.currency_code }}</td>
                     <td>{{ row.mobile }}</td>
                     <td>
-                        {% if row.email_status == 'sent' %}
-                        <span class="badge bg-info text-dark">sent</span>
-                        {% else %}
-                        <span class="badge bg-secondary">{{ row.email_status or 'pending' }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if row.otp_status == 'verified' %}
-                        <span class="badge bg-success">verified</span>
-                        {% elif row.otp_status == 'sent' %}
-                        <span class="badge bg-info text-dark">sent</span>
-                        {% elif row.otp_status == 'failed' %}
-                        <span class="badge bg-danger">failed</span>
-                        {% else %}
-                        <span class="badge bg-warning text-dark">pending</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if row.doc_status == 'verified' %}
-                        <span class="badge bg-success">verified</span>
-                        {% elif row.doc_status == 'submitted' %}
-                        <span class="badge bg-info text-dark">submitted</span>
-                        {% else %}
-                        <span class="badge bg-warning text-dark">pending</span>
-                        {% endif %}
+                        <div class="d-flex flex-column gap-1">
+                            <div>
+                                <span class="text-muted small">Doc:</span>
+                                {% if row.doc_status == 'verified' %}
+                                <span class="badge bg-success">verified</span>
+                                {% elif row.doc_status == 'submitted' %}
+                                <span class="badge bg-info text-dark">submitted</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">pending</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="text-muted small">OTP:</span>
+                                {% if row.otp_status == 'verified' %}
+                                <span class="badge bg-success">verified</span>
+                                {% elif row.otp_status == 'sent' %}
+                                <span class="badge bg-info text-dark">sent</span>
+                                {% elif row.otp_status == 'failed' %}
+                                <span class="badge bg-danger">failed</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">pending</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="text-muted small">Form-C:</span>
+                                {% if row.formc_submitted %}
+                                <span class="badge bg-success">submitted</span>
+                                <span class="small text-muted">({{ row.formc_id or '-' }})</span>
+                                {% else %}
+                                <span class="badge bg-secondary">pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
                     </td>
                     <td class="d-flex gap-1 flex-wrap">
-                        <form method="post" action="{{ url_for('swift_remittance.send_secure_link', record_id=row.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-secondary">Send SMS</button>
-                        </form>
+                        <a href="{{ url_for('swift_remittance.record_details', record_id=row.id) }}"
+                           class="btn btn-sm btn-info text-dark">Details</a>
+                        {% if row.doc_status in ['submitted', 'verified'] or row.formc_submitted %}
+                          <button type="button" class="btn btn-sm btn-secondary" disabled
+                            title="Already submitted">Send SMS</button>
+                        {% else %}
+                          <form method="post" action="{{ url_for('swift_remittance.send_secure_link', record_id=row.id) }}">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                              <button type="submit" class="btn btn-sm btn-secondary">Send SMS</button>
+                          </form>
+                        {% endif %}
                         {% if row.doc_status == 'submitted' %}
                         <form method="post" action="{{ url_for('swift_remittance.mark_verified', record_id=row.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
