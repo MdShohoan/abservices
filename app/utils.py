@@ -1244,10 +1244,35 @@ def smsnewapi(mobile,otp_message=''):
                 }'''
     
     #return response
-    r = requests.post(url, data=json_data, headers=headers)
+    try:
+        # Avoid hanging the request forever if SMS gateway is down
+        r = requests.post(url, data=json_data, headers=headers, timeout=10)
+    except Exception as ex:
+        LOG.exception("SMS gateway request failed: %s", ex)
+        return {
+            "status": "FAILED",
+            "result": "sms not sent",
+            "phone": mobile,
+            "sms_type": "EN",
+            "message": otp_message,
+            "error": str(ex),
+            "datetime": datetime.datetime.now().strftime("%Y-%m-%d %I:%M%p"),
+        }
     #Status Code: 200, Response: {'status': 'SUCCESS', 'status_code': 200, 'error_message': '', 'smsinfo': [{'sms_status': 'SUCCESS', 'status_message': 'Success', 'msisdn': '8801673615816', 'sms_type': 'BN', 'sms_body': 'আমার সোনার বাংলা', 'csms_id': '20221228121910', 'reference_id': '63abdfbbac066093890'}]}
     #print(f"Status Code: {r.status_code}, Response: {r.json()}")
-    json_resp_data = r.json()
+    try:
+        json_resp_data = r.json()
+    except Exception as ex:
+        LOG.exception("SMS gateway returned non-JSON response: %s", ex)
+        return {
+            "status": "FAILED",
+            "result": "sms not sent",
+            "phone": mobile,
+            "sms_type": "EN",
+            "message": otp_message,
+            "error": f"non-json response (status={getattr(r, 'status_code', None)})",
+            "datetime": datetime.datetime.now().strftime("%Y-%m-%d %I:%M%p"),
+        }
     print (json_resp_data)
     #json_resp_data = {'status': 'SUCCESS', 'status_code': 200, 'error_message': '', 'smsinfo': [{'sms_status': 'SUCCESS', 'status_message': 'Success', 'msisdn': '8801673615816', 'sms_type': 'BN', 'sms_body': 'আমার সোনার বাংলা', 'csms_id': '20221228121910', 'reference_id': '63abdfbbac066093890'}]}
     #LOG.debug("*******%s :  SMS SSL API Response  : %s  *******",mobile,json_resp_data)
@@ -1259,7 +1284,7 @@ def smsnewapi(mobile,otp_message=''):
     #print (json_resp_data['smsinfo'])
     #print (json_resp_data['smsinfo'][0]['sms_body'])
     #print (json_resp_data['smsinfo'])
-    if (json_resp_data['smsinfo']):
+    if (json_resp_data.get('smsinfo')):
         #print ('Hello World !')
         #print (json_resp_data['smsinfo'][0]['sms_body'])
         response = {

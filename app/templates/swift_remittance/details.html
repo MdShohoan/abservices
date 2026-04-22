@@ -62,18 +62,79 @@
             <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ submission.applicant_email }}</dd>
             <dt class="col-sm-3">Nationality</dt><dd class="col-sm-9">{{ submission.applicant_nationality }}</dd>
             <dt class="col-sm-3">Purpose</dt><dd class="col-sm-9">{{ submission.purpose_specify }}</dd>
-            <dt class="col-sm-3">Form-C Type</dt><dd class="col-sm-9">{{ submission.remittance_type }}</dd>
+            <dt class="col-sm-3">Form-C Type</dt><dd class="col-sm-9">{{ submission.remittance_type or '-' }}</dd>
             <dt class="col-sm-3">Form-C ID</dt><dd class="col-sm-9">{{ submission.formc_id or '-' }}</dd>
-            <dt class="col-sm-3">Document</dt>
-            <dd class="col-sm-9">
-              {% if submission.doc_file_path %}
-                <a href="{{ submission.doc_file_path }}" target="_blank" rel="noopener">Open uploaded document</a>
-              {% else %}
-                -
-              {% endif %}
-            </dd>
-            <dt class="col-sm-3">Uploaded At</dt><dd class="col-sm-9">{{ submission.doc_upload_at or '-' }}</dd>
           </dl>
+
+          {% if submission.formc_id %}
+          <div class="rounded-3 shadow-sm mt-4 p-4 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3"
+               style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #059669;">
+            <div>
+              <div class="fw-bold text-dark fs-6"><i class="fas fa-file-invoice text-success me-2"></i>Form C (print layout)</div>
+              <p class="small text-muted mb-0 mt-1">Opens the same detailed Form C view used on the dashboard — good for checking what the customer submitted.</p>
+            </div>
+            <a class="btn btn-success px-4" href="{{ url_for('dashboard.viewformc', id=submission.formc_id) }}" target="_blank" rel="noopener">
+              <i class="fas fa-external-link-alt me-2"></i>View Form C
+            </a>
+          </div>
+          {% endif %}
+
+          {% if submission.doc_file_path %}
+          {% set doc_url = submission.doc_file_path %}
+          {% set ext = (doc_url.split('.')|last)|lower if '.' in doc_url else '' %}
+          <div class="card border-0 shadow mt-4 overflow-hidden">
+            <div class="px-4 py-3 text-white" style="background: linear-gradient(90deg, #1d4ed8, #2563eb, #38bdf8);">
+              <h3 class="h6 mb-0"><i class="fas fa-paperclip me-2"></i>Supporting document</h3>
+              <p class="mb-0 mt-1 small" style="opacity: .9;">Customer upload{% if submission.doc_upload_at %} · {{ submission.doc_upload_at }}{% endif %}</p>
+            </div>
+            <div class="card-body" style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="{{ doc_url }}" class="btn btn-primary" target="_blank" rel="noopener">
+                  <i class="fas fa-external-link-alt me-1"></i>Open in new tab
+                </a>
+                <a href="{{ doc_url }}" class="btn btn-outline-primary" download>
+                  <i class="fas fa-download me-1"></i>Download
+                </a>
+              </div>
+              {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+              <p class="small text-muted mb-2"><i class="fas fa-image text-info me-1"></i><strong>Preview</strong> — click the image for a larger view</p>
+              <button type="button" class="btn btn-link p-0 border-0" data-bs-toggle="modal" data-bs-target="#swiftDocPreviewModal" title="Full size">
+                <img src="{{ doc_url }}" alt="Uploaded document" class="img-fluid rounded-3 border shadow-sm" style="max-height: 300px; cursor: zoom-in;">
+              </button>
+              <div class="modal fade" id="swiftDocPreviewModal" tabindex="-1" aria-labelledby="swiftDocPreviewLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-dark text-white">
+                      <h5 class="modal-title" id="swiftDocPreviewLabel"><i class="fas fa-image me-2"></i>Document — full size</h5>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body bg-dark text-center p-2">
+                      <img src="{{ doc_url }}" class="img-fluid rounded" alt="Uploaded document full size" style="max-height: 85vh;">
+                    </div>
+                    <div class="modal-footer bg-light">
+                      <a href="{{ doc_url }}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Open original</a>
+                      <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% elif ext == 'pdf' %}
+              <div class="p-4 bg-white rounded-3 border border-2 border-danger border-opacity-25 shadow-sm">
+                <p class="mb-2 fs-6"><i class="fas fa-file-pdf text-danger fa-2x me-3 align-middle"></i><strong class="text-dark">PDF file</strong></p>
+                <p class="text-muted small mb-0">Browsers cannot always show PDFs inside this page. Use <strong class="text-primary">Open in new tab</strong> above to view or print.</p>
+              </div>
+              {% else %}
+              <div class="alert alert-secondary mb-0 border-0 shadow-sm">
+                <i class="fas fa-file me-2"></i>No inline preview for this file type. Use <strong>Open in new tab</strong> or <strong>Download</strong> above.
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% elif submission.doc_upload_at %}
+          <p class="text-muted small mt-3 mb-0"><i class="fas fa-clock me-1"></i>Upload time on record ({{ submission.doc_upload_at }}) but file URL is missing.</p>
+          {% else %}
+          <p class="text-muted small mt-3 mb-0"><i class="fas fa-folder-open me-1"></i>No supporting document uploaded for this submission.</p>
+          {% endif %}
         {% endif %}
       </div>
 

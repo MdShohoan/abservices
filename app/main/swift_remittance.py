@@ -4,6 +4,7 @@
 import datetime
 import os
 import uuid
+import secrets
 from collections import defaultdict
 from hashlib import sha256
 
@@ -53,6 +54,10 @@ def _token_max_age_seconds():
 
 def _otp_expiry_seconds():
     return int(current_app.config.get("SWIFT_OTP_EXPIRY_SECONDS", 300))
+
+def _new_url_reference():
+    # 20 chars max to fit swift_details.url_reference (varchar(20))
+    return secrets.token_urlsafe(16)[:20]
 
 
 def _safe_status_value(value):
@@ -145,6 +150,12 @@ def _fetch_records():
         item["doc_status"] = _safe_status_value(item.get("doc_status"))
         item["otp_status"] = _safe_status_value(item.get("otp_status"))
         item["email_status"] = _safe_status_value(item.get("email_status"))
+        # Determine if Form-C is required (business rule: amount >= 20000)
+        try:
+            item_amount = float(item.get("amount") or 0)
+        except (TypeError, ValueError):
+            item_amount = 0.0
+        item["requires_formc"] = item_amount >= 20000
         # Provide display-friendly aliases used in templates
         item.setdefault("customer_name", item.get("receiver", ""))
         item.setdefault("account_name", item.get("account", ""))
@@ -174,7 +185,8 @@ def _fetch_records():
                     continue
                 item["submission_id"] = s.id
                 item["formc_id"] = s.formc_id
-                item["formc_submitted"] = int(s.formc_submitted or 0)
+                # Keep this boolean-like so templates behave consistently
+                item["formc_submitted"] = bool(int(s.formc_submitted or 0))
                 item["doc_file_path"] = s.doc_file_path
                 item["applicant_email"] = s.applicant_email
     except Exception as ex:
@@ -361,32 +373,30 @@ def send_secure_link(record_id):
             flash("Customer already submitted Form-C. SMS link is not required.", "info")
             return redirect(url_for("swift_remittance.admin_panel"))
 
-        token = _serializer().dumps({
-            "record_id": record_id,
-            "phone": record.get("mobile", ""),
-        })
-
-        # Store url_reference in the table
-        _update_url_reference(record_id, token[:20])  # store first 20 chars as reference
+        # Use existing unique url_reference (varchar(20)) as the link key.
+        url_ref = (record.get("url_reference") or "").strip()
+        if not url_ref:
+            url_ref = _new_url_reference()
+            _update_url_reference(record_id, url_ref)
         _update_email_status(record_id, "sent")
 
-        verify_url = url_for(
-            "swift_remittance.verify_entry",
-            token=token,
-            _external=True,
-        )
+        verify_url = url_for("swift_remittance.verify_entry", ref=url_ref, _external=True)
 
         sms_message = (
             "AB Bank SWIFT Remittance: Complete your verification using this secure link "
             f"(valid for {_token_max_age_seconds() // 60} minutes): {verify_url}"
         )
         # ✅ TEST MODE (no SMS)
-        print("\n====== SWIFT TEST LINK ======")
-        print(f"Phone: {record['phone_number']}")
-        print(f"Link: {verify_url}")
-        print("================================\n")
+        try:
+            print("\n====== SWIFT TEST LINK ======")
+            print(f"Phone: {record.get('phone_number') or record.get('mobile')}")
+            print(f"Link: {verify_url}")
+            print("================================\n")
+        except Exception:
+            # Never fail the request just because console printing failed
+            pass
 
-        flash("Test mode: Link printed in console.", "success")
+        flash("Link generated (test mode). Check console output.", "success")
         # Send SMS
         # mobile = record.get("mobile", "")
         # if mobile:
@@ -408,7 +418,8 @@ def send_secure_link(record_id):
 
     except Exception as ex:
         LOG.exception("SWIFT send-link failed for record %s: %s", record_id, ex)
-        flash("Unexpected error while sending SMS.", "danger")
+        # Surface the real reason in UI while you're configuring the environment
+        flash(f"Unexpected error while sending SMS: {ex}", "danger")
 
     return redirect(url_for("swift_remittance.admin_panel"))
 
@@ -418,6 +429,21 @@ def send_secure_link(record_id):
 def mark_verified(record_id):
     try:
         _update_record_status(record_id, STATUS_VERIFIED)
+        # Also mark the latest submission (if any) as verified for consistent UI.
+        try:
+            latest_submission = (
+                SwiftFormCSubmission.query.filter_by(swift_record_id=record_id)
+                .order_by(SwiftFormCSubmission.created_at.desc())
+                .first()
+            )
+            if latest_submission:
+                latest_submission.status = 3  # verified
+                latest_submission.updated_at = datetime.datetime.now()
+                db.session.commit()
+        except Exception as ex:
+            # don't block verification if submission update fails
+            LOG.exception("SWIFT submission verify update failed for %s: %s", record_id, ex)
+
         flash("Record marked as verified.", "success")
     except Exception as ex:
         LOG.exception("SWIFT status update failed for %s: %s", record_id, ex)
@@ -425,21 +451,116 @@ def mark_verified(record_id):
     return redirect(url_for("swift_remittance.admin_panel"))
 
 
+@swift_remittance.route("/delete/<int:record_id>", methods=["POST"])
+@login_required
+def delete_record(record_id):
+    """
+    Delete a SWIFT settlement record and any latest submission data.
+    """
+    try:
+        # Try to delete related Form-C row (created in abbl.remittance on submit)
+        try:
+            from app.dbmodels.formc import Remittance
+
+            latest_submission = (
+                SwiftFormCSubmission.query.filter_by(swift_record_id=record_id)
+                .order_by(SwiftFormCSubmission.created_at.desc())
+                .first()
+            )
+            if latest_submission and latest_submission.formc_id:
+                Remittance.query.filter_by(id=int(latest_submission.formc_id)).delete(synchronize_session=False)
+        except Exception as ex:
+            LOG.exception("SWIFT delete: remittance cleanup failed for %s: %s", record_id, ex)
+
+        # Delete all submissions linked to this SWIFT record
+        try:
+            SwiftFormCSubmission.query.filter_by(swift_record_id=record_id).delete(synchronize_session=False)
+        except Exception as ex:
+            LOG.exception("SWIFT delete: submission cleanup failed for %s: %s", record_id, ex)
+
+        # Delete the settlement record from swift_details (or configured table)
+        db.session.execute(
+            text(
+                f"""
+                DELETE FROM {_qualified_table_name()}
+                WHERE "id" = :record_id
+                """
+            ),
+            {"record_id": record_id},
+        )
+        db.session.commit()
+        flash("Record deleted.", "success")
+    except Exception as ex:
+        db.session.rollback()
+        LOG.exception("SWIFT delete failed for %s: %s", record_id, ex)
+        flash("Could not delete record.", "danger")
+    return redirect(url_for("swift_remittance.admin_panel"))
+
+
 @swift_remittance.route("/verify")
 def verify_entry():
-    token = request.args.get("token", "").strip()
-    if not token:
+    # Link uses short unique url_reference: /verify?ref=XXXX
+    url_ref = request.args.get("ref", "").strip()
+    if not url_ref:
         flash("Invalid verification link.", "danger")
         return redirect(url_for("main.index"))
 
     try:
-        payload = _serializer().loads(token, max_age=_token_max_age_seconds())
-        record_id = int(payload.get("record_id"))
-        record = _fetch_record(record_id)
-        if not record:
+        # Lookup record by url_reference from the settlement table
+        cols = _selectable_columns()
+        if "url_reference" not in cols:
+            flash("Verification is not available (url_reference column missing).", "danger")
+            return redirect(url_for("main.index"))
+
+        select_clause = ", ".join([f'\"{col}\"' for col in cols])
+        sql = text(
+            f"""
+            SELECT {select_clause}
+            FROM {_qualified_table_name()}
+            WHERE "url_reference" = :url_ref
+            LIMIT 1
+            """
+        )
+        row = db.session.execute(sql, {"url_ref": url_ref}).mappings().first()
+        if not row:
             flash("Record not found for this link.", "danger")
             return redirect(url_for("main.index"))
-        return render_template("swift_remittance/verify.html", token=token, record=record)
+
+        record_id = int(row.get("id"))
+        record = dict(row)
+        record["doc_status"] = _safe_status_value(record.get("doc_status"))
+        record["otp_status"] = _safe_status_value(record.get("otp_status"))
+        record["email_status"] = _safe_status_value(record.get("email_status"))
+        record.setdefault("customer_name", record.get("receiver", ""))
+        record.setdefault("account_name", record.get("account", ""))
+        record.setdefault("phone_number", record.get("mobile", ""))
+        record.setdefault("branch_name", record.get("network", "Unknown"))
+        record.setdefault("status", record.get("doc_status", STATUS_PENDING))
+
+        # Auto-generate OTP on link open (no need to click "Send OTP")
+        try:
+            otp = str(app.utils.otpgen())
+            expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=_otp_expiry_seconds())
+            otp_hash = sha256(otp.encode("utf-8")).hexdigest()
+            session["swift_otp"] = {
+                "record_id": record_id,
+                "otp_hash": otp_hash,
+                "expires_at": expires_at.isoformat(),
+                "verified": False,
+                "token": url_ref,
+                "tries": 0,
+            }
+            # TEST MODE output (same behavior as send_otp route)
+            print("\n====== SWIFT TEST OTP (auto) ======")
+            print(f"Phone: {record.get('phone_number') or record.get('mobile')}")
+            print(f"OTP: {otp}")
+            print("===================================\n")
+            # Optional: mark otp_status=sent if you want
+            # _update_otp_status(record_id, "sent")
+        except Exception as ex:
+            LOG.exception("SWIFT auto OTP generation failed for %s: %s", record_id, ex)
+            flash("Could not generate OTP automatically. Please try again.", "danger")
+        return render_template("swift_remittance/verify.html", token=url_ref, record=record)
     except SignatureExpired:
         flash("Verification link expired. Please request a new SMS.", "danger")
         return redirect(url_for("main.index"))
@@ -874,7 +995,50 @@ def swift_formc_submit():
         dt = datetime.datetime.now()
         formc_id = int(dt.strftime("%Y%m%d%H%M%S%f")[:-3])
 
-        # Update swift_formc_submission table only (no separate remittance table needed)
+        # Create a matching record in abbl.remittance so the existing dashboard
+        # route (/dashboard/viewformc/<id>) can display the submitted Form-C.
+        from app.dbmodels.formc import Remittance
+        try:
+            rem_amount = float(formc_data.get("remittance_amount") or 0)
+        except (TypeError, ValueError):
+            rem_amount = 0.0
+        rem_currency = (formc_data.get("remittance_currency") or "").strip() or "USD"
+
+        # Ensure NOT NULL fields have safe values
+        remitter_name = remitter_name or "-"
+        remitter_address = remitter_address or "-"
+        remitted_bank_name = remitted_bank_name or "-"
+        remitted_bank_address = remitted_bank_address or "-"
+        applicant_name = applicant_name or "-"
+        applicant_address = applicant_address or "-"
+        applicant_nationality = applicant_nationality or "bangladeshi"
+
+        db.session.add(
+            Remittance(
+                formc_id,
+                remitter_name=remitter_name,
+                remitter_address=remitter_address,
+                remittance_amount=rem_amount,
+                remittance_currency=rem_currency,
+                remitted_bank_name=remitted_bank_name,
+                remitted_bank_address=remitted_bank_address,
+                purpose_of_remittance_id=purpose_of_remittance_id,
+                applicant_name=applicant_name,
+                applicant_nationality=applicant_nationality,
+                applicant_address=applicant_address,
+                application_date=dt,
+                print_date=dt,
+                print_status=0,
+                printed_by=0,
+                remittance_type=remittance_type,
+                ictPurposeSpecify=ictPurposeSpecify or "-",
+                applicant_mobile=applicant_mobile,
+                remittance_amount_words="",
+                remittance_reference=remittance_reference,
+            )
+        )
+
+        # Update swift_formc_submission record as well (tracking, admin view)
         submission_id = formc_data.get("submission_id")
         current_app.logger.info(f"Updating submission_id: {submission_id}")
         
@@ -899,7 +1063,7 @@ def swift_formc_submit():
                 submission.applicant_nationality = applicant_nationality
                 submission.status = 2  # formc submitted
                 submission.updated_at = dt
-                
+
                 db.session.commit()
                 current_app.logger.info(f"Successfully updated submission {submission_id} with formc_id {formc_id}")
             else:

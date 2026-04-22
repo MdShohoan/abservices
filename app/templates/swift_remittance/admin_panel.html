@@ -26,10 +26,23 @@
 {% for network_name, records in grouped_records.items() %}
 <div class="card border-light shadow-sm mb-4">
     <div class="card-header">
-        <h2 class="h5 mb-0">Network: {{ network_name }} ({{ records|length }} records)</h2>
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <h2 class="h5 mb-0">Network: {{ network_name }} ({{ records|length }} records)</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small">Search</span>
+                <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    style="max-width: 260px"
+                    placeholder="ID / name / mobile / account…"
+                    data-swift-search
+                    data-target-table="swiftTable{{ loop.index }}"
+                />
+            </div>
+        </div>
     </div>
     <div class="table-responsive">
-        <table class="table align-items-center table-flush mb-0">
+        <table class="table align-items-center table-flush mb-0" id="swiftTable{{ loop.index }}">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -77,11 +90,19 @@
                             </div>
                             <div>
                                 <span class="text-muted small">Form-C:</span>
-                                {% if row.formc_submitted %}
-                                <span class="badge bg-success">submitted</span>
-                                <span class="small text-muted">({{ row.formc_id or '-' }})</span>
+                                {% if not row.requires_formc %}
+                                  <span class="badge bg-light text-dark">n/a</span>
                                 {% else %}
-                                <span class="badge bg-secondary">pending</span>
+                                  {% if row.formc_submitted %}
+                                    {% if row.doc_status == 'verified' %}
+                                      <span class="badge bg-success">verified</span>
+                                    {% else %}
+                                      <span class="badge bg-success">submitted</span>
+                                    {% endif %}
+                                    <span class="small text-muted">({{ row.formc_id or '-' }})</span>
+                                  {% else %}
+                                    <span class="badge bg-secondary">pending</span>
+                                  {% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -104,6 +125,11 @@
                             <button type="submit" class="btn btn-sm btn-success">Mark Verified</button>
                         </form>
                         {% endif %}
+                        <form method="post" action="{{ url_for('swift_remittance.delete_record', record_id=row.id) }}"
+                              onsubmit="return confirm('Delete this SWIFT record? This will also remove linked submissions.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -112,4 +138,26 @@
     </div>
 </div>
 {% endfor %}
+
+<script>
+    (function () {
+        function normalize(s) {
+            return (s || "").toString().toLowerCase().trim();
+        }
+
+        document.querySelectorAll("[data-swift-search]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                var q = normalize(input.value);
+                var tableId = input.getAttribute("data-target-table");
+                var table = document.getElementById(tableId);
+                if (!table) return;
+                var rows = table.querySelectorAll("tbody tr");
+                rows.forEach(function (tr) {
+                    var text = normalize(tr.innerText);
+                    tr.style.display = (q === "" || text.indexOf(q) !== -1) ? "" : "none";
+                });
+            });
+        });
+    })();
+</script>
 {% endblock %}

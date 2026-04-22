@@ -126,43 +126,6 @@
             </li>
 
             {% endif %}-->
-            
-            
-            <!--{% if current_user.has_roles('Admin') or current_user.has_roles('Checker') %}
-            <li class="nav-item">
-                <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-pages">
-            <span>
-              <span class="sidebar-icon"><span class="far fa-file-alt"></span></span>
-                <span class="sidebar-text">Reports</span>
-                </span>
-                <span class="link-arrow"><span class="fas fa-chevron-right"></span></span>
-                </span>
-                <div class="multi-level collapse " role="list" id="submenu-pages" aria-expanded="false">
-                    <ul class="flex-column nav">
-                        {% if current_user.has_roles('Admin') or current_user.has_roles('Checker') %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/risk/upcominglist">
-                                <span class="sidebar-text">Review Date Future </span>
-                            </a>
-                        </li>
-                        {% endif %} {% if current_user.has_roles('Admin') or current_user.has_roles('Checker') %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/risk/missedreviewlist">
-                                <span class="sidebar-text">Review Date Past</span>
-                            </a>
-                        </li>
-                        {% endif %}-->
-
-                        <!--<li class="nav-item">
-                            <a class="nav-link" href="/">
-                                <span class="sidebar-text">Summary</span>
-                            </a>
-                        </li>-->
-
-                    </ul>
-                </div>
-            </li>
-            {% endif %}
 
             <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
             <li class="nav-item">

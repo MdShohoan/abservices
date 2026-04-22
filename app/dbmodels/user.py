@@ -33,9 +33,10 @@ def get_ldap_connection():
 UserRole = db.Table(
     'user_roles',
     db.Model.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('abbl.users.id')),
-    db.Column('role_id', db.Integer, db.ForeignKey('abbl.roles.id')),
-    schema='abbl'
+    db.Column('id', db.Integer, primary_key=True, autoincrement=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('abbl.users.id', ondelete='CASCADE')),
+    db.Column('role_id', db.Integer, db.ForeignKey('abbl.roles.id', ondelete='CASCADE')),
+    schema='abbl',
 )
 class User(db.Model,UserMixin):
         __tablename__ = 'users'
@@ -269,16 +270,9 @@ class Role(db.Model):
         id = db.Column(db.Integer, primary_key=True)
         name = db.Column(db.String(50), unique=True)
 
-# Define the UserRoles association table
+# ORM handle for the same physical table as UserRole (must not redefine the table in MetaData)
 class UserRoles(db.Model):
-    __tablename__ = 'user_roles'
-    #__table_args__ = {"schema":"abbl"}
-    #__bind_key__ = 'otp_db_bind'
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
-    # Setup Flask-User and specify the User data-model
-    #user_manager = UserManager(app, db, User)
+    __table__ = UserRole
 
     
 

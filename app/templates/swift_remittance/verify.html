@@ -14,11 +14,9 @@
                     <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
                     {% endfor %}
 
-                    <form method="post" action="{{ url_for('swift_remittance.send_otp') }}" class="mb-4">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="token" value="{{ token }}">
-                        <button type="submit" class="btn btn-primary">Send OTP</button>
-                    </form>
+                    <div class="alert alert-info" role="alert">
+                        OTP has been sent automatically. Please check your phone and enter the OTP below.
+                    </div>
 
                     <form method="post" action="{{ url_for('swift_remittance.verify_otp') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

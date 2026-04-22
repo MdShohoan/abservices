@@ -315,43 +315,47 @@ def viewemail(id):
 @dashboard.route('/viewformc/<id>')
 @login_required
 def viewformc(id):
+	purpose = ''
+	print_date = datetime.datetime.now().strftime("%d/%m/%Y")
+	purposes = []
 	try:
-		formc_list = []
-		purpose = ''
-		print_date = ''
-		dt = datetime.datetime.now()
+		try:
+			rid = int(str(id).strip())
+		except (TypeError, ValueError):
+			flash('Invalid Form C reference.', 'warning')
+			return redirect(url_for('dashboard.index'))
 		purposes = Remittance_Purpose.query.all()
-		
-		print ('date:....')
-		print (dt)
-		#cust_branch = current_user.Branch.strip()
-		#branch = Branches.query.filter_by(Mnemonic=cust_branch).first()
-		#if current_user.has_roles('Admin'):
-			#tin_list = TININFO.query.filter_by(status=0).all()
-			#formc_list = Remittance.query.filter_by(status=0).all()
-		formc_list = Remittance.query.filter_by(id=id).first()
-		print ('formc list ')
-		print (formc_list.application_date)
-		print (formc_list.purpose_of_remittance_id)
-		print_date 						  = dt.strftime("%d/%m/%Y")
-		#print (print_date)
-		
-		if formc_list.purpose_of_remittance_id > 0:
-			purpose_id = formc_list.purpose_of_remittance_id
-			purpose_res = Remittance_Purpose.query.filter_by(id=purpose_id).first()
-			purpose = purpose_res.name
+		formc_list = Remittance.query.filter_by(id=rid).first()
+		if not formc_list:
+			flash('Form C record not found for this reference.', 'warning')
+			return redirect(url_for('dashboard.index'))
+		if formc_list.purpose_of_remittance_id and formc_list.purpose_of_remittance_id > 0:
+			purpose_res = Remittance_Purpose.query.filter_by(id=formc_list.purpose_of_remittance_id).first()
+			purpose = (purpose_res.name if purpose_res else '') or '-'
 		else:
-			purpose = formc_list.ictPurposeSpecify
-		#print (formc_list)
-		
-	except Exception as e:	
-		print(e)
-	finally:
-		#return render_template('dashboard/formc.html')
+			purpose = (formc_list.ictPurposeSpecify or '') or '-'
 		if formc_list.remittance_type == 'ICT':
-			return render_template('dashboard/formcict.html',formc_list=formc_list,purpose=purpose,print_date=print_date,purposes =purposes )
-		else:	
-			return render_template('dashboard/formcdetails.html',formc_list=formc_list,purpose=purpose,print_date=print_date,purposes =purposes )
+			return render_template(
+				'dashboard/formcict.html',
+				formc_list=formc_list,
+				purpose=purpose,
+				print_date=print_date,
+				purposes=purposes,
+			)
+		return render_template(
+			'dashboard/formcdetails.html',
+			formc_list=formc_list,
+			purpose=purpose,
+			print_date=print_date,
+			purposes=purposes,
+		)
+	except Exception:
+		current_app.logger.exception('viewformc failed for id=%s', id)
+		flash(
+			'Unable to load Form C. Check that abbl.remittance exists and the database matches this environment.',
+			'danger',
+		)
+		return redirect(url_for('dashboard.index'))
 
 
 @dashboard.route('/')

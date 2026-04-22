@@ -6,6 +6,7 @@ import json
 class Remittance_Purpose(db.Model):
 
 	__tablename__ = 'remittance_purpose'
+	__table_args__ = {'schema': 'abbl'}
 
 	id              = db.Column(db.Integer, primary_key=True)
 	name 			= db.Column(db.Text,nullable=False)
@@ -37,8 +38,10 @@ class Remittance_Purpose(db.Model):
 class Remittance(db.Model):
 
 	__tablename__ = 'remittance'
+	__table_args__ = {'schema': 'abbl'}
 
-	id              = db.Column(db.Integer, primary_key=True)
+	# IDs are generated as YYYYMMDDHHMMSSms-style integers (too large for 32-bit)
+	id              = db.Column(db.BigInteger, primary_key=True, autoincrement=False)
 	remitter_name   = db.Column(db.String(255), nullable=False)
 	remitter_address = db.Column(db.Text,nullable=False)
 	remittance_amount = db.Column(db.Float,nullable=False)
